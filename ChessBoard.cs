@@ -12,7 +12,6 @@ namespace UserInterface
         private const int _gridSize = 8;
 
         private Board _board = new Board(Colour.White);
-        private Colour _currentColour = Colour.White;
         private List<int> _potentialMoves = new List<int>();
         private int? _selectedPiecePosition;
 
@@ -70,11 +69,12 @@ namespace UserInterface
 
             for (var i = 0; i < 64; i++)
             {
+                var point = _board.GetPointFromPosition(i);
                 if (_board.GetPiece(i) == null)
                 {
+                    _panels[point.X, point.Y].BackgroundImage = null;
                     continue;
                 }
-                var point = _board.GetPointFromPosition(i);
                 _panels[point.X, point.Y].BackgroundImage = _board.GetPiece(i).Image;
             }
         }
@@ -82,13 +82,19 @@ namespace UserInterface
         private void OnPanelClick(object sender, EventArgs e)
         {
             Panel panel = sender as Panel;
+            RedrawBoard();
 
             int selectedPosition = GetPanelPosition(panel);
 
             //check if square is highlighted and if is, moves selected piece
             if (_potentialMoves.Contains(selectedPosition))
             {
-                MovePiece(selectedPosition);
+                if (_selectedPiecePosition == null)
+                {
+                    throw new Exception("Piece is not selected");
+                }
+                CheckForEndOfGame(selectedPosition);
+                _board.MovePiece(_selectedPiecePosition.Value, selectedPosition);
                 _potentialMoves.Clear();
                 RedrawBoard();
                 return;
@@ -96,7 +102,7 @@ namespace UserInterface
 
             //check if has unselected piece
             var chessPiece = _board.GetPiece(selectedPosition);
-            if (chessPiece == null || chessPiece.Colour != _currentColour)
+            if (chessPiece == null || chessPiece.Colour != _board.CurrentColour)
             {
                 _selectedPiecePosition = null;
                 _potentialMoves.Clear();
@@ -114,29 +120,6 @@ namespace UserInterface
                 var potentialMoveCoordinates = _board.GetPointFromPosition(potentialMove);
                 _panels[potentialMoveCoordinates.X, potentialMoveCoordinates.Y].BackColor = Color.LightBlue;
             }
-        }
-
-        private void MovePiece(int selectedPosition)
-        {
-            if (_selectedPiecePosition == null)
-            {
-                throw new Exception("Piece is not selected");
-            }
-            var selectedPieceCoordinates = _board.GetPointFromPosition(_selectedPiecePosition.Value);
-            var selectedPositionCoordinates = _board.GetPointFromPosition(selectedPosition);
-            _panels[selectedPieceCoordinates.X, selectedPieceCoordinates.Y].BackgroundImage = null;
-
-            var selectedPiece = _board.GetPiece(_selectedPiecePosition.Value);
-
-            _panels[selectedPositionCoordinates.X, selectedPositionCoordinates.Y].BackgroundImage = selectedPiece.Image;
-            CheckForEndOfGame(selectedPosition);
-            _board.Pieces[selectedPosition] = selectedPiece;
-            _board.Pieces[_selectedPiecePosition.Value] = null;
-
-            selectedPiece.MovedOn = _board.CurrentPlay;
-
-            _board.CurrentPlay += 1;
-            _currentColour = _currentColour == Colour.Black ? Colour.White : Colour.Black;
         }
 
         private void CheckForEndOfGame(int selectedPosition)

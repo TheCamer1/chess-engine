@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using UserInterface.Pieces;
 
 namespace UserInterface
@@ -8,11 +9,60 @@ namespace UserInterface
         public Piece[] Pieces { get; set; }
         public Colour Perspective { get; set; }
         public int CurrentPlay { get; set; } = 0;
+        public Colour CurrentColour { get; set; } = Colour.White;
 
         public Board(Colour perspective)
         {
             SetUpBoard(perspective);
             Perspective = perspective;
+        }
+
+        public void MovePiece(int selectedPiecePosition, int selectedPosition)
+        {
+            var selectedPiece = GetPiece(selectedPiecePosition);
+
+            EnPassantCapture(selectedPiecePosition, selectedPosition, selectedPiece);
+
+            Pieces[selectedPosition] = selectedPiece;
+            Pieces[selectedPiecePosition] = null;
+            Promotion(selectedPosition, selectedPiece);
+
+            selectedPiece.MovedOn = CurrentPlay;
+
+            CurrentPlay += 1;
+            CurrentColour = CurrentColour == Colour.Black ? Colour.White : Colour.Black;
+        }
+
+        private void Promotion(int selectedPosition, Piece selectedPiece)
+        {
+            if (selectedPiece is Pawn && (selectedPosition / 8 == 0 || selectedPosition / 8 == 7))
+            {
+                var newQueen = new Queen(selectedPiece.Colour)
+                {
+                    MovedOn = selectedPiece.MovedOn
+                };
+                Pieces[selectedPosition] = newQueen;
+            }
+        }
+
+        private void EnPassantCapture(int selectedPiecePosition, int selectedPosition, Piece selectedPiece)
+        {
+            if (selectedPiece is Pawn
+                && (selectedPiecePosition - selectedPosition) % 8 != 0
+                && GetPiece(selectedPosition) == null)
+            {
+                var vector = selectedPiecePosition - selectedPosition;
+                int capturedPawnPosition;
+                if (Math.Abs(vector) == 9)
+                {
+                    capturedPawnPosition = selectedPiecePosition - (vector / Math.Abs(vector));
+                }
+                else
+                {
+                    capturedPawnPosition = selectedPiecePosition + (vector / Math.Abs(vector));
+                }
+                Pieces[capturedPawnPosition] = null;
+            }
         }
 
         private void SetUpBoard(Colour perspective)

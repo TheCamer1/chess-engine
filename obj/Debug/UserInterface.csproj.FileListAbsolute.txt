@@ -7,3 +7,4 @@ C:\Code\Personal\chess-engine\bin\Debug\UserInterface.pdb
 C:\Code\Personal\chess-engine\obj\Debug\UserInterface.Properties.Resources.resources
 C:\Code\Personal\chess-engine\obj\Debug\UserInterface.exe
 C:\Code\Personal\chess-engine\obj\Debug\UserInterface.pdb
+C:\Code\Personal\chess-engine\obj\Debug\UserInterface.csproj.AssemblyReference.cache
