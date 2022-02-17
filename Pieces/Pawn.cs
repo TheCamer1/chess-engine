@@ -4,12 +4,28 @@ namespace UserInterface.Pieces
 {
     public class Pawn : Piece
     {
-        public Pawn(Colour colour) : base(colour)
+        public int? TwoStepMovePerformedOn { get; set; }
+        public Pawn(Colour colour, int position) : base(colour, position)
         {
             Image = colour == Colour.Black ? Properties.Resources.BlackPawn : Properties.Resources.WhitePawn;
         }
 
-        public override List<int> GetPossibleMoves(Board board, int position)
+        public override List<int> GetAttackedSquares(Board board, int position)
+        {
+            var direction = board.Perspective == Colour ? -1 : 1;
+            var possibleChecks = new List<int>();
+            if (IsNextSquareValid(board, position, position, direction * 9, true))
+            {
+                possibleChecks.Add(position + direction * 9);
+            }
+            if (IsNextSquareValid(board, position, position, direction * 7, true))
+            {
+                possibleChecks.Add(position + direction * 7);
+            }
+            return possibleChecks;
+        }
+
+        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board, int position)
         {
             var possibleMoves = new List<int>();
             var direction = board.Perspective == Colour ? -1 : 1;
@@ -19,8 +35,8 @@ namespace UserInterface.Pieces
             var possibleCaptures = new List<int>();
             AddDirectCapturingStep(board, possibleCaptures, position, direction, 9);
             AddDirectCapturingStep(board, possibleCaptures, position, direction, 7);
-            AddEnPassantCapturingStep(board, possibleCaptures, position, direction, 9, -1);
-            AddEnPassantCapturingStep(board, possibleCaptures, position, direction, 7, 1);
+            AddEnPassantCapturingStep(board, possibleCaptures, position, direction, 9, 1);
+            AddEnPassantCapturingStep(board, possibleCaptures, position, direction, 7, -1);
 
             AddStepsToPossibleMoves(board, position, possibleMoves, possibleCaptures);
             return possibleMoves;
@@ -49,6 +65,10 @@ namespace UserInterface.Pieces
 
         private void AddDirectCapturingStep(Board board, List<int> possibleSteps, int position, int direction, int step)
         {
+            if (!IsNextSquareValid(board, position, position, step * direction))
+            {
+                return;
+            }
             var testingPosition = position + direction * step;
             var capturablePiece = board.GetPiece(testingPosition);
             if (capturablePiece != null && capturablePiece.Colour != Colour)
@@ -59,14 +79,16 @@ namespace UserInterface.Pieces
 
         private void AddEnPassantCapturingStep(Board board, List<int> possibleSteps, int position, int direction, int step, int capturablePieceStep)
         {
-            var newPosition = position + direction * step;
-            var capturablePiecePosition = position + capturablePieceStep;
+            if (!IsNextSquareValid(board, position, position, step * direction))
+            {
+                return;
+            }
+            var capturablePiecePosition = position + capturablePieceStep * direction;
             var capturablePiece = board.GetPiece(capturablePiecePosition);
             if (capturablePiece != null
                 && capturablePiece.Colour != Colour
                 && capturablePiece is Pawn
-                && capturablePiece.MovedOn == board.CurrentPlay - 1
-                && (capturablePiecePosition / 8 == 3 || capturablePiecePosition / 8 == 4))
+                && ((Pawn)capturablePiece).TwoStepMovePerformedOn == board.CurrentPlay - 1)
             {
                 possibleSteps.Add(direction * step);
             }

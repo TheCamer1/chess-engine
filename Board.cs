@@ -1,51 +1,131 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using UserInterface.Pieces;
 
 namespace UserInterface
 {
     public class Board
     {
-        public Piece[] Pieces { get; set; }
-        public Colour Perspective { get; set; }
+        public Dictionary<int, Piece> PiecePositions { get; set; } = new Dictionary<int, Piece>();
+        public Colour Perspective { get; }
         public int CurrentPlay { get; set; } = 0;
         public Colour CurrentColour { get; set; } = Colour.White;
+        public Dictionary<Colour, int> KingPositions { get; set; } = new Dictionary<Colour, int>();
 
         public Board(Colour perspective)
         {
-            SetUpBoard(perspective);
             Perspective = perspective;
+            SetUpBoard(perspective);
+            foreach (var piece in PiecePositions)
+            {
+                piece.Value.SetAttackedSquares(this);
+            }
+        }
+
+        public bool IsKingInCheck(Colour colour)
+        {
+            var kingPosition = KingPositions[colour];
+            return IsSquareAttacked(ChessService.GetOppositeColour(colour), kingPosition);
+        }
+
+        public bool IsSquareAttacked(Colour colour, int square)
+        {
+            return PiecePositions.Any(e => e.Value.Colour == colour && e.Value.AttackedSquares.Contains(square));
+        }
+
+        public List<Piece> GetAttackingPieces(Colour colour, int square)
+        {
+            return PiecePositions
+                .Select(e => e.Value)
+                .Where(e => e.Colour == colour && e.AttackedSquares.Contains(square))
+                .ToList();
         }
 
         public void MovePiece(int selectedPiecePosition, int selectedPosition)
         {
             var selectedPiece = GetPiece(selectedPiecePosition);
 
-            EnPassantCapture(selectedPiecePosition, selectedPosition, selectedPiece);
+            PerformEnPassantCapture(selectedPiecePosition, selectedPosition, selectedPiece);
+            PerformCastlingRookMove(selectedPiecePosition, selectedPosition, selectedPiece);
+            SetPawnTwoStepMovePerformedOn(selectedPiecePosition, selectedPosition, selectedPiece);
 
-            Pieces[selectedPosition] = selectedPiece;
-            Pieces[selectedPiecePosition] = null;
+            PiecePositions.Remove(selectedPiecePosition);
+            PiecePositions[selectedPosition] = selectedPiece;
             Promotion(selectedPosition, selectedPiece);
 
+            if (selectedPiece is King)
+            {
+                KingPositions[selectedPiece.Colour] = selectedPosition;
+            }
+
             selectedPiece.MovedOn = CurrentPlay;
+            selectedPiece.Position = selectedPosition;
+            SetPieceAndLongRangePieceAttackedSquares(selectedPiece);
 
             CurrentPlay += 1;
-            CurrentColour = CurrentColour == Colour.Black ? Colour.White : Colour.Black;
+            CurrentColour = ChessService.GetOppositeColour(CurrentColour);
+        }
+
+        private void SetPieceAndLongRangePieceAttackedSquares(Piece selectedPiece)
+        {
+            var selectedPieceType = selectedPiece.GetType();
+            if (selectedPieceType != typeof(Queen) 
+                && selectedPieceType != typeof(Rook) 
+                && selectedPieceType != typeof(Bishop))
+            {
+                selectedPiece.SetAttackedSquares(this);
+            }
+            var longRangePieces = PiecePositions
+                .Select(e => e.Value)
+                .Where(e => e is Queen || e is Rook || e is Bishop);
+            foreach (var longRangePiece in longRangePieces)
+            {
+                longRangePiece.SetAttackedSquares(this);
+            }
+        }
+
+        private void SetPawnTwoStepMovePerformedOn(int selectedPiecePosition, int selectedPosition, Piece selectedPiece)
+        {
+            if (selectedPiece.GetType() != typeof(Pawn) || (selectedPiecePosition - selectedPosition) % 8 != 0)
+            {
+                return;
+            }
+            ((Pawn)selectedPiece).TwoStepMovePerformedOn = CurrentPlay;
+        }
+
+        private void PerformCastlingRookMove(int selectedPiecePosition, int selectedPosition, Piece selectedPiece)
+        {
+            if (selectedPiece.GetType() != typeof(King) || Math.Abs(selectedPiecePosition - selectedPosition) != 2)
+            {
+                return;
+            }
+            if (selectedPiecePosition - selectedPosition > 0)
+            {
+                PiecePositions[selectedPiecePosition - 1] = PiecePositions[selectedPiecePosition - 4];
+                PiecePositions.Remove(selectedPiecePosition - 4);
+            }
+            else
+            {
+                PiecePositions[selectedPiecePosition + 1] = PiecePositions[selectedPiecePosition + 3];
+                PiecePositions.Remove(selectedPiecePosition + 3);
+            }
         }
 
         private void Promotion(int selectedPosition, Piece selectedPiece)
         {
             if (selectedPiece is Pawn && (selectedPosition / 8 == 0 || selectedPosition / 8 == 7))
             {
-                var newQueen = new Queen(selectedPiece.Colour)
+                var newQueen = new Queen(selectedPiece.Colour, selectedPosition)
                 {
                     MovedOn = selectedPiece.MovedOn
                 };
-                Pieces[selectedPosition] = newQueen;
+                PiecePositions[selectedPosition] = newQueen;
             }
         }
 
-        private void EnPassantCapture(int selectedPiecePosition, int selectedPosition, Piece selectedPiece)
+        private void PerformEnPassantCapture(int selectedPiecePosition, int selectedPosition, Piece selectedPiece)
         {
             if (selectedPiece is Pawn
                 && (selectedPiecePosition - selectedPosition) % 8 != 0
@@ -61,69 +141,53 @@ namespace UserInterface
                 {
                     capturedPawnPosition = selectedPiecePosition + (vector / Math.Abs(vector));
                 }
-                Pieces[capturedPawnPosition] = null;
+                PiecePositions.Remove(capturedPawnPosition);
             }
         }
 
         private void SetUpBoard(Colour perspective)
         {
             var bottomColour = perspective;
-            var topColour = perspective == Colour.White ? Colour.Black : Colour.White;
-            Pieces = new Piece[64];
-            Pieces[0] = new Rook(topColour);
-            Pieces[1] = new Knight(topColour);
-            Pieces[2] = new Bishop(topColour);
-            Pieces[3] = new Queen(topColour);
-            Pieces[4] = new King(topColour);
-            Pieces[5] = new Bishop(topColour);
-            Pieces[6] = new Knight(topColour);
-            Pieces[7] = new Rook(topColour);
+            var topColour = ChessService.GetOppositeColour(perspective);
+            PlacePieces(topColour, 0);
             for (var i = 8; i < 16; i++)
             {
-                Pieces[i] = new Pawn(topColour);
+                PiecePositions[i] = new Pawn(topColour, i);
             }
             for (var i = 48; i < 56; i++)
             {
-                Pieces[i] = new Pawn(bottomColour);
+                PiecePositions[i] = new Pawn(bottomColour, i);
             }
-            Pieces[56] = new Rook(bottomColour);
-            Pieces[57] = new Knight(bottomColour);
-            Pieces[58] = new Bishop(bottomColour);
-            Pieces[59] = new Queen(bottomColour);
-            Pieces[60] = new King(bottomColour);
-            Pieces[61] = new Bishop(bottomColour);
-            Pieces[62] = new Knight(bottomColour);
-            Pieces[63] = new Rook(bottomColour);
+            PlacePieces(bottomColour, 56);
+
+            KingPositions[bottomColour] = 60;
+            KingPositions[topColour] = 4;
         }
 
-        public Point GetPointFromPosition(int position)
+        private void PlacePieces(Colour colour, int startingPosition)
         {
-            var x = position % 8;
-            var y = position / 8;
-            return new Point(x, y);
-        }
-
-        public int GetPositionFromPoint(int x, int y)
-        {
-            if (x > 7 || y > 7)
-            {
-                throw new System.Exception("Invalid coordinates: " + x + ", " + y);
-            }
-            return x + 8 * y;
+            PiecePositions[startingPosition] = new Rook(colour, startingPosition);
+            PiecePositions[startingPosition + 1] = new Knight(colour, startingPosition + 1);
+            PiecePositions[startingPosition + 2] = new Bishop(colour, startingPosition + 2);
+            PiecePositions[startingPosition + 3] = new Queen(colour, startingPosition + 3);
+            PiecePositions[startingPosition + 4] = new King(colour, startingPosition + 4);
+            PiecePositions[startingPosition + 5] = new Bishop(colour, startingPosition + 5);
+            PiecePositions[startingPosition + 6] = new Knight(colour, startingPosition + 6);
+            PiecePositions[startingPosition + 7] = new Rook(colour, startingPosition + 7);
         }
 
         public Piece GetPiece(int x, int y)
         {
-            return Pieces[GetPositionFromPoint(x, y)];
+            return GetPiece(ChessService.GetPositionFromPoint(x, y));
         }
 
         public Piece GetPiece(int position)
         {
-            if (position < 0 || position > 63)
+            if (position < 0 || position > 63 || !PiecePositions.ContainsKey(position))
             {
                 return null;
             }
-            return Pieces[position];
+            return PiecePositions[position];
         }
     }
 }

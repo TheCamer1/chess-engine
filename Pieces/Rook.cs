@@ -4,12 +4,17 @@ namespace UserInterface.Pieces
 {
     public class Rook : Piece
     {
-        public Rook(Colour colour) : base(colour)
+        public Rook(Colour colour, int position) : base(colour, position)
         {
             Image = colour == Colour.Black ? Properties.Resources.BlackRook : Properties.Resources.WhiteRook;
         }
 
-        public override List<int> GetPossibleMoves(Board board, int position)
+        public override List<int> GetAttackedSquares(Board board, int position)
+        {
+            return GetHorizontalMoves(board, position, true);
+        }
+
+        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board, int position)
         {
             return GetHorizontalMoves(board, position);
         }

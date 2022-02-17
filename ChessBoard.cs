@@ -69,7 +69,13 @@ namespace UserInterface
 
             for (var i = 0; i < 64; i++)
             {
-                var point = _board.GetPointFromPosition(i);
+                var point = ChessService.GetPointFromPosition(i);
+
+                //if (_board.IsSquareAttacked(Colour.White, i))
+                //{
+                //    _panels[point.X, point.Y].BackColor = Color.AliceBlue;
+                //}
+
                 if (_board.GetPiece(i) == null)
                 {
                     _panels[point.X, point.Y].BackgroundImage = null;
@@ -110,14 +116,14 @@ namespace UserInterface
             }
             _selectedPiecePosition = selectedPosition;
 
-            var panelCoordinates = _board.GetPointFromPosition(selectedPosition);
+            var panelCoordinates = ChessService.GetPointFromPosition(selectedPosition);
             _panels[panelCoordinates.X, panelCoordinates.Y].BackColor = Color.Blue;
             _potentialMoves = chessPiece.GetPossibleMoves(_board, selectedPosition);
 
             // colors in potential panels
             foreach (var potentialMove in _potentialMoves)
             {
-                var potentialMoveCoordinates = _board.GetPointFromPosition(potentialMove);
+                var potentialMoveCoordinates = ChessService.GetPointFromPosition(potentialMove);
                 _panels[potentialMoveCoordinates.X, potentialMoveCoordinates.Y].BackColor = Color.LightBlue;
             }
         }
@@ -145,12 +151,11 @@ namespace UserInterface
                 {
                     if (_panels[row, column] == panel)
                     {
-                        return _board.GetPositionFromPoint(row, column);
+                        return ChessService.GetPositionFromPoint(row, column);
                     }
                 }
             }
             throw new Exception("Panel was not found");
         }
-
     }
 }
