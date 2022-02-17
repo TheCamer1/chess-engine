@@ -15,14 +15,14 @@ namespace UserInterface.Pieces
         public override List<int> GetAttackedSquares(Board board, int position)
         {
             var possibleMoves = new List<int>();
-            AddStepsToPossibleMoves(board, position, possibleMoves, _possibleSteps, true);
+            ChessService.AddStepsToPossibleMoves(board, Colour, position, possibleMoves, _possibleSteps, true);
             return possibleMoves;
         }
 
         public override List<int> GetPossibleMovesIgnoringCheckRules(Board board, int position)
         {
             var possibleMoves = new List<int>();
-            AddStepsToPossibleMoves(board, position, possibleMoves, _possibleSteps);
+            ChessService.AddStepsToPossibleMoves(board, Colour, position, possibleMoves, _possibleSteps);
             return possibleMoves;
         }
 
@@ -72,7 +72,7 @@ namespace UserInterface.Pieces
             foreach (var step in _possibleSteps)
             {
                 var newPosition = position + step;
-                if (IsNextSquareValid(board, position, position, step) 
+                if (ChessService.IsNextSquareValid(board, Colour, position, position, step) 
                     && !board.IsSquareAttacked(ChessService.GetOppositeColour(Colour), newPosition))
                 {
                     possibleMoves.Add(newPosition);

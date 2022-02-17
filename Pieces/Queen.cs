@@ -11,15 +11,15 @@ namespace UserInterface.Pieces
 
         public override List<int> GetAttackedSquares(Board board, int position)
         {
-            var queenMoves = GetDiagonalMoves(board, position, true);
-            queenMoves.AddRange(GetHorizontalMoves(board, position, true));
+            var queenMoves = ChessService.GetDiagonalMoves(board, Colour, position, true);
+            queenMoves.AddRange(ChessService.GetHorizontalMoves(board, Colour, position, true));
             return queenMoves;
         }
 
         public override List<int> GetPossibleMovesIgnoringCheckRules(Board board, int position)
         {
-            var queenMoves = GetDiagonalMoves(board, position);
-            queenMoves.AddRange(GetHorizontalMoves(board, position));
+            var queenMoves = ChessService.GetDiagonalMoves(board, Colour, position);
+            queenMoves.AddRange(ChessService.GetHorizontalMoves(board, Colour, position));
             return queenMoves;
         }
     }

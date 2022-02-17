@@ -11,12 +11,12 @@ namespace UserInterface.Pieces
 
         public override List<int> GetAttackedSquares(Board board, int position)
         {
-            return GetDiagonalMoves(board, position, true);
+            return ChessService.GetDiagonalMoves(board, Colour, position, true);
         }
 
         public override List<int> GetPossibleMovesIgnoringCheckRules(Board board, int position)
         {
-            return GetDiagonalMoves(board, position);
+            return ChessService.GetDiagonalMoves(board, Colour, position);
         }
     }
 }
