@@ -21,16 +21,16 @@ namespace UserInterface.Pieces
 
         public virtual void SetAttackedSquares(Board board)
         {
-            AttackedSquares = new HashSet<int>(GetAttackedSquares(board, Position));
+            AttackedSquares = new HashSet<int>(GetAttackedSquares(board));
         }
 
-        public abstract List<int> GetAttackedSquares(Board board, int position);
-        public abstract List<int> GetPossibleMovesIgnoringCheckRules(Board board, int position);
+        public abstract List<int> GetAttackedSquares(Board board);
+        public abstract List<int> GetPossibleMovesIgnoringCheckRules(Board board);
 
-        public virtual List<int> GetPossibleMoves(Board board, int position)
+        public virtual List<int> GetPossibleMoves(Board board)
         {
-            var possibleMoves = GetPossibleMovesIgnoringCheckRules(board, position);
-            var possibleMovesIfPinned = ChessService.GetPossibleMovesIfPinned(board, Colour, possibleMoves, position);
+            var possibleMoves = GetPossibleMovesIgnoringCheckRules(board);
+            var possibleMovesIfPinned = ChessService.GetPossibleMovesIfPinned(board, Colour, possibleMoves, Position);
             if (!board.IsKingInCheck(Colour))
             {
                 return possibleMovesIfPinned;

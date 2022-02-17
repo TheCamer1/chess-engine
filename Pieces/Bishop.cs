@@ -9,14 +9,14 @@ namespace UserInterface.Pieces
             Image = colour == Colour.Black ? Properties.Resources.BlackBishop : Properties.Resources.WhiteBishop;
         }
 
-        public override List<int> GetAttackedSquares(Board board, int position)
+        public override List<int> GetAttackedSquares(Board board)
         {
-            return ChessService.GetDiagonalMoves(board, Colour, position, true);
+            return ChessService.GetDiagonalMoves(board, Colour, Position, true);
         }
 
-        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board, int position)
+        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board)
         {
-            return ChessService.GetDiagonalMoves(board, Colour, position);
+            return ChessService.GetDiagonalMoves(board, Colour, Position);
         }
     }
 }

@@ -9,17 +9,17 @@ namespace UserInterface.Pieces
             Image = colour == Colour.Black ? Properties.Resources.BlackQueen : Properties.Resources.WhiteQueen;
         }
 
-        public override List<int> GetAttackedSquares(Board board, int position)
+        public override List<int> GetAttackedSquares(Board board)
         {
-            var queenMoves = ChessService.GetDiagonalMoves(board, Colour, position, true);
-            queenMoves.AddRange(ChessService.GetHorizontalMoves(board, Colour, position, true));
+            var queenMoves = ChessService.GetDiagonalMoves(board, Colour, Position, true);
+            queenMoves.AddRange(ChessService.GetHorizontalMoves(board, Colour, Position, true));
             return queenMoves;
         }
 
-        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board, int position)
+        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board)
         {
-            var queenMoves = ChessService.GetDiagonalMoves(board, Colour, position);
-            queenMoves.AddRange(ChessService.GetHorizontalMoves(board, Colour, position));
+            var queenMoves = ChessService.GetDiagonalMoves(board, Colour, Position);
+            queenMoves.AddRange(ChessService.GetHorizontalMoves(board, Colour, Position));
             return queenMoves;
         }
     }

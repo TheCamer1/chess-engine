@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using UserInterface.Pieces;
 
@@ -85,6 +87,59 @@ namespace UserInterface
             }
         }
 
+        private void PlayRandomly()
+        {
+            while (!IsGameOver())
+            {
+                var random = new Random();
+                var pieces = _board.PiecePositions.Where(e => e.Value.Colour == _board.CurrentColour).ToList();
+                int pieceNumber = random.Next(0, pieces.Count());
+                var piece = pieces[pieceNumber];
+                var possibleMoves = piece.Value.GetPossibleMoves(_board);
+                if (!possibleMoves.Any())
+                {
+                    continue;
+                }
+                wait(100);
+                int moveNumber = random.Next(0, possibleMoves.Count() - 1);
+                var move = possibleMoves[moveNumber];
+                _board.MovePiece(piece.Key, move);
+                RedrawBoard();
+            }
+        }
+
+        public void wait(int milliseconds)
+        {
+            var timer1 = new System.Windows.Forms.Timer();
+            if (milliseconds == 0 || milliseconds < 0) return;
+
+            // Console.WriteLine("start wait timer");
+            timer1.Interval = milliseconds;
+            timer1.Enabled = true;
+            timer1.Start();
+
+            timer1.Tick += (s, e) =>
+            {
+                timer1.Enabled = false;
+                timer1.Stop();
+                // Console.WriteLine("stop wait timer");
+            };
+
+            while (timer1.Enabled)
+            {
+                Application.DoEvents();
+            }
+        }
+
+        private bool IsGameOver()
+        {
+            return !_board
+                .PiecePositions
+                .Where(e => e.Value.Colour == _board.CurrentColour)
+                .SelectMany(e => e.Value.GetPossibleMoves(_board))
+                .Any();
+        }
+
         private void OnPanelClick(object sender, EventArgs e)
         {
             Panel panel = sender as Panel;
@@ -118,7 +173,7 @@ namespace UserInterface
 
             var panelCoordinates = ChessService.GetPointFromPosition(selectedPosition);
             _panels[panelCoordinates.X, panelCoordinates.Y].BackColor = Color.Blue;
-            _potentialMoves = chessPiece.GetPossibleMoves(_board, selectedPosition);
+            _potentialMoves = chessPiece.GetPossibleMoves(_board);
 
             // colors in potential panels
             foreach (var potentialMove in _potentialMoves)

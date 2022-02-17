@@ -12,17 +12,17 @@ namespace UserInterface.Pieces
             Image = colour == Colour.Black ? Properties.Resources.BlackKnight : Properties.Resources.WhiteKnight;
         }
 
-        public override List<int> GetAttackedSquares(Board board, int position)
+        public override List<int> GetAttackedSquares(Board board)
         {
             var possibleMoves = new List<int>();
-            ChessService.AddStepsToPossibleMoves(board, Colour, position, possibleMoves, _possibleSteps, true);
+            ChessService.AddStepsToPossibleMoves(board, Colour, Position, possibleMoves, _possibleSteps, true);
             return possibleMoves;
         }
 
-        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board, int position)
+        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board)
         {
             var possibleMoves = new List<int>();
-            ChessService.AddStepsToPossibleMoves(board, Colour, position, possibleMoves, _possibleSteps);
+            ChessService.AddStepsToPossibleMoves(board, Colour, Position, possibleMoves, _possibleSteps);
             return possibleMoves;
         }
     }
