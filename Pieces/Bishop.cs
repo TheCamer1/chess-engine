@@ -7,11 +7,12 @@ namespace UserInterface.Pieces
         public Bishop(Colour colour, int position) : base(colour, position)
         {
             Image = colour == Colour.Black ? Properties.Resources.BlackBishop : Properties.Resources.WhiteBishop;
+            PieceType = PieceType.Bishop;
         }
 
         public override List<int> GetAttackedSquares(Board board)
         {
-            return ChessService.GetDiagonalMoves(board, Colour, Position, true);
+            return ChessService.GetDiagonalMoves(board, Colour, Position, true, true);
         }
 
         public override List<int> GetPossibleMovesIgnoringCheckRules(Board board)

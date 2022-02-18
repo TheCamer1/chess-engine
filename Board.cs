@@ -43,29 +43,34 @@ namespace UserInterface
                 .ToList();
         }
 
-        public void MovePiece(int selectedPiecePosition, int selectedPosition)
+        public void MovePiece(Piece piece, int selectedPosition)
         {
-            var selectedPiece = GetPiece(selectedPiecePosition);
+            var selectedPiecePosition = piece.Position;
+            PerformEnPassantCapture(selectedPiecePosition, selectedPosition, piece);
+            PerformCastlingRookMove(selectedPiecePosition, selectedPosition, piece);
+            SetPawnTwoStepMovePerformedOn(selectedPiecePosition, selectedPosition, piece);
 
-            PerformEnPassantCapture(selectedPiecePosition, selectedPosition, selectedPiece);
-            PerformCastlingRookMove(selectedPiecePosition, selectedPosition, selectedPiece);
-            SetPawnTwoStepMovePerformedOn(selectedPiecePosition, selectedPosition, selectedPiece);
+            MovePiece(selectedPiecePosition, selectedPosition, piece);
 
+            if (piece is King)
+            {
+                KingPositions[piece.Colour] = selectedPosition;
+            }
+
+            CurrentPlay += 1;
+            CurrentColour = ChessService.GetOppositeColour(CurrentColour);
+        }
+
+        private void MovePiece(int selectedPiecePosition, int selectedPosition, Piece selectedPiece)
+        {
             PiecePositions.Remove(selectedPiecePosition);
+            PiecePositions.Remove(selectedPosition);
             PiecePositions[selectedPosition] = selectedPiece;
             Promotion(selectedPosition, selectedPiece);
-
-            if (selectedPiece is King)
-            {
-                KingPositions[selectedPiece.Colour] = selectedPosition;
-            }
 
             selectedPiece.MovedOn = CurrentPlay;
             selectedPiece.Position = selectedPosition;
             SetPieceAndLongRangePieceAttackedSquares(selectedPiece);
-
-            CurrentPlay += 1;
-            CurrentColour = ChessService.GetOppositeColour(CurrentColour);
         }
 
         private void SetPieceAndLongRangePieceAttackedSquares(Piece selectedPiece)
@@ -103,13 +108,11 @@ namespace UserInterface
             }
             if (selectedPiecePosition - selectedPosition > 0)
             {
-                PiecePositions[selectedPiecePosition - 1] = PiecePositions[selectedPiecePosition - 4];
-                PiecePositions.Remove(selectedPiecePosition - 4);
+                MovePiece(selectedPiecePosition - 4, selectedPiecePosition - 1, PiecePositions[selectedPiecePosition - 4]);
             }
             else
             {
-                PiecePositions[selectedPiecePosition + 1] = PiecePositions[selectedPiecePosition + 3];
-                PiecePositions.Remove(selectedPiecePosition + 3);
+                MovePiece(selectedPiecePosition + 3, selectedPiecePosition + 1, PiecePositions[selectedPiecePosition + 3]);
             }
         }
 

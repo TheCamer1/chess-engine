@@ -25,6 +25,10 @@ namespace UserInterface
         {
             var difference = finalPosition - initialPosition;
             var direction = difference / Math.Abs(difference);
+            if (initialPosition / 8 == finalPosition / 8)
+            {
+                return direction;
+            }
             if (difference % 9 == 0)
             {
                 return direction * 9;
@@ -96,7 +100,7 @@ namespace UserInterface
             return true;
         }
 
-        public static Piece GetQueenVectoredAttackingPiece(Board board, Colour colour, int initialPosition, int vector)
+        public static Piece GetQueenVectoredAttackingPiece(Board board, Colour colour, int initialPosition, int vector, bool isShortRangeIncluded = false)
         {
             var endOfVector = GetEndOfVector(board, colour, initialPosition, vector, true, true);
             var piece = board.GetPiece(endOfVector);
@@ -108,7 +112,7 @@ namespace UserInterface
             if (piece.GetType() != typeof(Queen)
                 && (piece.GetType() != typeof(Bishop) || !_diagonalVectors.Contains(vector))
                 && (piece.GetType() != typeof(Rook) || !_horizontalVectors.Contains(vector))
-                && (piece.GetType() != typeof(Pawn) || !_diagonalVectors.Contains(vector)))
+                && (!isShortRangeIncluded || piece.GetType() != typeof(Pawn) || !_diagonalVectors.Contains(vector)))
             {
                 return null;
             }
@@ -126,30 +130,30 @@ namespace UserInterface
             return testingPosition;
         }
 
-        public static List<int> GetDiagonalMoves(Board board, Colour colour, int position, bool includeOwnPieces = false)
+        public static List<int> GetDiagonalMoves(Board board, Colour colour, int position, bool includeOwnPieces = false, bool excludeKings = false)
         {
             var possibleMoves = new List<int>();
             foreach (var vector in _diagonalVectors)
             {
-                AddVectorToPossibleMoves(board, colour, position, possibleMoves, vector, includeOwnPieces);
+                AddVectorToPossibleMoves(board, colour, position, possibleMoves, vector, includeOwnPieces, excludeKings);
             }
             return possibleMoves;
         }
 
-        public static List<int> GetHorizontalMoves(Board board, Colour colour, int position, bool includeOwnPieces = false)
+        public static List<int> GetHorizontalMoves(Board board, Colour colour, int position, bool includeOwnPieces = false, bool excludeKings = false)
         {
             var possibleMoves = new List<int>();
             foreach (var vector in _horizontalVectors)
             {
-                AddVectorToPossibleMoves(board, colour, position, possibleMoves, vector, includeOwnPieces);
+                AddVectorToPossibleMoves(board, colour, position, possibleMoves, vector, includeOwnPieces, excludeKings);
             }
             return possibleMoves;
         }
 
-        public static void AddVectorToPossibleMoves(Board board, Colour colour, int initialPosition, List<int> possibleMoves, int vector, bool includeOwnPieces = false)
+        public static void AddVectorToPossibleMoves(Board board, Colour colour, int initialPosition, List<int> possibleMoves, int vector, bool includeOwnPieces = false, bool excludeKings = false)
         {
             var testingPosition = initialPosition;
-            while (IsNextSquareValid(board, colour, initialPosition, testingPosition, vector, includeOwnPieces))
+            while (IsNextSquareValid(board, colour, initialPosition, testingPosition, vector, includeOwnPieces, excludeKings))
             {
                 testingPosition += vector;
                 possibleMoves.Add(testingPosition);

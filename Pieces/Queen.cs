@@ -7,12 +7,13 @@ namespace UserInterface.Pieces
         public Queen(Colour colour, int position) : base(colour, position)
         {
             Image = colour == Colour.Black ? Properties.Resources.BlackQueen : Properties.Resources.WhiteQueen;
+            PieceType = PieceType.Queen;
         }
 
         public override List<int> GetAttackedSquares(Board board)
         {
-            var queenMoves = ChessService.GetDiagonalMoves(board, Colour, Position, true);
-            queenMoves.AddRange(ChessService.GetHorizontalMoves(board, Colour, Position, true));
+            var queenMoves = ChessService.GetDiagonalMoves(board, Colour, Position, true, true);
+            queenMoves.AddRange(ChessService.GetHorizontalMoves(board, Colour, Position, true, true));
             return queenMoves;
         }
 

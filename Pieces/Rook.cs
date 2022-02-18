@@ -7,11 +7,12 @@ namespace UserInterface.Pieces
         public Rook(Colour colour, int position) : base(colour, position)
         {
             Image = colour == Colour.Black ? Properties.Resources.BlackRook : Properties.Resources.WhiteRook;
+            PieceType = PieceType.Rook;
         }
 
         public override List<int> GetAttackedSquares(Board board)
         {
-            return ChessService.GetHorizontalMoves(board, Colour, Position, true);
+            return ChessService.GetHorizontalMoves(board, Colour, Position, true, true);
         }
 
         public override List<int> GetPossibleMovesIgnoringCheckRules(Board board)
