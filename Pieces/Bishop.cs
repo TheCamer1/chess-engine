@@ -9,6 +9,8 @@ namespace UserInterface.Pieces
             Image = colour == Colour.Black ? Properties.Resources.BlackBishop : Properties.Resources.WhiteBishop;
         }
 
+        public Bishop(Bishop bishop) : base(bishop) { }
+
         public override List<int> GetAttackedSquares(Board board)
         {
             return ChessService.GetDiagonalMoves(board, Colour, Position, true);
@@ -17,6 +19,11 @@ namespace UserInterface.Pieces
         public override List<int> GetPossibleMovesIgnoringCheckRules(Board board)
         {
             return ChessService.GetDiagonalMoves(board, Colour, Position);
+        }
+
+        public override object Clone()
+        {
+            return new Bishop(this);
         }
     }
 }

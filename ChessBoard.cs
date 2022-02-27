@@ -142,6 +142,55 @@ namespace UserInterface
 
         private void OnPanelClick(object sender, EventArgs e)
         {
+            var number = GetNumberOfPositions(_board, 2, true);
+            Console.WriteLine(number);
+            //for (var i = 1; i < 10; i++)
+            //{
+            //    var number = GetNumberOfPositions(_board, i, true);
+            //    Console.WriteLine(number);
+            //}
+        }
+
+        private int GetNumberOfPositions(Board board, int depth, bool printPositions = false)
+        {
+            if (depth == 0)
+            {
+                return 1;
+            }
+            var numberOfMoves = 0;
+            var pieces = board.PiecePositions.Values.Where(e => e.Colour == board.CurrentColour);
+            foreach (var piece in pieces)
+            {
+                var moves = piece.GetPossibleMoves(board);
+                foreach (var move in moves)
+                {
+                    var newBoard = new Board(board);
+                    newBoard.MovePiece(piece.Position, move);
+                    var moveCount = GetNumberOfPositions(newBoard, depth - 1);
+                    numberOfMoves += moveCount;
+                    if (printPositions)
+                    {
+                        Console.WriteLine(GetPgn(piece.Position, move) + ": " + moveCount);
+                    }
+                }
+            }
+            return numberOfMoves;
+        }
+
+        private string GetPgn(int startPosition, int endPosition)
+        {
+            return GetPgn(startPosition) + GetPgn(endPosition);
+        }
+
+        private string GetPgn(int position)
+        {
+            var first = (char)((position % 8) + 97);
+            var second = (8 - (position / 8)).ToString();
+            return first + second;
+        }
+
+        private void OnPanelClick2(object sender, EventArgs e)
+        {
             Panel panel = sender as Panel;
             RedrawBoard();
 

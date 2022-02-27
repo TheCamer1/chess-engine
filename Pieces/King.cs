@@ -12,6 +12,8 @@ namespace UserInterface.Pieces
             Image = colour == Colour.Black ? Properties.Resources.BlackKing : Properties.Resources.WhiteKing;
         }
 
+        public King(King king) : base(king) { }
+
         public override List<int> GetAttackedSquares(Board board)
         {
             var possibleMoves = new List<int>();
@@ -79,6 +81,11 @@ namespace UserInterface.Pieces
                 }
             }
             return possibleMoves;
+        }
+
+        public override object Clone()
+        {
+            return new King(this);
         }
     }
 }

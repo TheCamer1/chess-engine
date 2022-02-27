@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using UserInterface.Pieces;
 
@@ -10,7 +9,7 @@ namespace UserInterface
     {
         public Dictionary<int, Piece> PiecePositions { get; set; } = new Dictionary<int, Piece>();
         public Colour Perspective { get; }
-        public int CurrentPlay { get; set; } = 0;
+        public int CurrentPly { get; set; } = 0;
         public Colour CurrentColour { get; set; } = Colour.White;
         public Dictionary<Colour, int> KingPositions { get; set; } = new Dictionary<Colour, int>();
 
@@ -24,10 +23,35 @@ namespace UserInterface
             }
         }
 
+        public Board(Board board)
+        {
+            PiecePositions = board.PiecePositions.ToDictionary(e => e.Key, e => (Piece)e.Value.Clone());
+            Perspective = board.Perspective;
+            CurrentPly = board.CurrentPly;
+            CurrentColour = board.CurrentColour;
+            KingPositions = new Dictionary<Colour, int>(board.KingPositions);
+        }
+
         public bool IsKingInCheck(Colour colour)
         {
             var kingPosition = KingPositions[colour];
             return IsSquareAttacked(ChessService.GetOppositeColour(colour), kingPosition);
+        }
+
+        public bool IsCheckmate(Colour colour)
+        {
+            if (!IsKingInCheck(colour))
+            {
+                return false;
+            }
+            if (PiecePositions[KingPositions[colour]].GetPossibleMoves(this).Any())
+            {
+                return false;
+            }
+            return !PiecePositions
+                .Values
+                .Where(e => e.Colour == colour)
+                .Any(e => e.GetPossibleMoves(this).Any());
         }
 
         public bool IsSquareAttacked(Colour colour, int square)
@@ -60,11 +84,11 @@ namespace UserInterface
                 KingPositions[selectedPiece.Colour] = selectedPosition;
             }
 
-            selectedPiece.MovedOn = CurrentPlay;
+            selectedPiece.MovedOn = CurrentPly;
             selectedPiece.Position = selectedPosition;
             SetPieceAndLongRangePieceAttackedSquares(selectedPiece);
 
-            CurrentPlay += 1;
+            CurrentPly += 1;
             CurrentColour = ChessService.GetOppositeColour(CurrentColour);
         }
 
@@ -92,7 +116,7 @@ namespace UserInterface
             {
                 return;
             }
-            ((Pawn)selectedPiece).TwoStepMovePerformedOn = CurrentPlay;
+            ((Pawn)selectedPiece).TwoStepMovePerformedOn = CurrentPly;
         }
 
         private void PerformCastlingRookMove(int selectedPiecePosition, int selectedPosition, Piece selectedPiece)
@@ -149,16 +173,39 @@ namespace UserInterface
         {
             var bottomColour = perspective;
             var topColour = ChessService.GetOppositeColour(perspective);
-            PlacePieces(topColour, 0);
-            for (var i = 8; i < 16; i++)
-            {
-                PiecePositions[i] = new Pawn(topColour, i);
-            }
-            for (var i = 48; i < 56; i++)
-            {
-                PiecePositions[i] = new Pawn(bottomColour, i);
-            }
-            PlacePieces(bottomColour, 56);
+            PiecePositions[0] = new Rook(topColour, 0);
+            PiecePositions[1] = new Knight(topColour, 1);
+            PiecePositions[2] = new Bishop(topColour, 2);
+            PiecePositions[3] = new Queen(topColour, 3);
+            PiecePositions[4] = new King(topColour, 4);
+            PiecePositions[5] = new Bishop(topColour, 5);
+            PiecePositions[6] = new Knight(topColour, 6);
+            PiecePositions[7] = new Rook(topColour, 7);
+            PiecePositions[8] = new Pawn(topColour, 8);
+            PiecePositions[9] = new Pawn(topColour, 9);
+            PiecePositions[10] = new Pawn(topColour, 10);
+            PiecePositions[11] = new Pawn(topColour, 11);
+            PiecePositions[12] = new Pawn(topColour, 12);
+            PiecePositions[13] = new Pawn(topColour, 13);
+            PiecePositions[14] = new Pawn(topColour, 14);
+            PiecePositions[15] = new Pawn(topColour, 15);
+
+            PiecePositions[32] = new Pawn(bottomColour, 32);
+            PiecePositions[49] = new Pawn(bottomColour, 49);
+            PiecePositions[50] = new Pawn(bottomColour, 50);
+            PiecePositions[51] = new Pawn(bottomColour, 51);
+            PiecePositions[52] = new Pawn(bottomColour, 52);
+            PiecePositions[53] = new Pawn(bottomColour, 53);
+            PiecePositions[54] = new Pawn(bottomColour, 54);
+            PiecePositions[55] = new Pawn(bottomColour, 55);
+            PiecePositions[56] = new Rook(bottomColour, 56);
+            PiecePositions[57] = new Knight(bottomColour, 57);
+            PiecePositions[58] = new Bishop(bottomColour, 58);
+            PiecePositions[59] = new Queen(bottomColour, 59);
+            PiecePositions[60] = new King(bottomColour, 60);
+            PiecePositions[61] = new Bishop(bottomColour, 61);
+            PiecePositions[62] = new Knight(bottomColour, 62);
+            PiecePositions[63] = new Rook(bottomColour, 63);
 
             KingPositions[bottomColour] = 60;
             KingPositions[topColour] = 4;

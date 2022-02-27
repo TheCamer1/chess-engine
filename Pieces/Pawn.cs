@@ -5,9 +5,15 @@ namespace UserInterface.Pieces
     public class Pawn : Piece
     {
         public int? TwoStepMovePerformedOn { get; set; }
+
         public Pawn(Colour colour, int position) : base(colour, position)
         {
             Image = colour == Colour.Black ? Properties.Resources.BlackPawn : Properties.Resources.WhitePawn;
+        }
+
+        public Pawn(Pawn pawn) : base(pawn) 
+        {
+            TwoStepMovePerformedOn = pawn.TwoStepMovePerformedOn;
         }
 
         public override List<int> GetAttackedSquares(Board board)
@@ -88,7 +94,7 @@ namespace UserInterface.Pieces
             if (capturablePiece != null
                 && capturablePiece.Colour != Colour
                 && capturablePiece is Pawn
-                && ((Pawn)capturablePiece).TwoStepMovePerformedOn == board.CurrentPlay - 1
+                && ((Pawn)capturablePiece).TwoStepMovePerformedOn == board.CurrentPly - 1
                 && !IsPinnedFromEnPassant(board, capturablePiecePosition))
             {
                 possibleSteps.Add(direction * step);
@@ -113,6 +119,11 @@ namespace UserInterface.Pieces
                 return true;
             }
             return false;
+        }
+
+        public override object Clone()
+        {
+            return new Pawn(this);
         }
     }
 }

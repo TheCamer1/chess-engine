@@ -62,7 +62,7 @@ namespace UserInterface
                 {
                     continue;
                 }
-                var pinningPiece = GetQueenVectoredAttackingPiece(board, colour, initialPosition, -vector);
+                var pinningPiece = GetQueenVectoredAttackingPiece(board, colour, initialPosition, -vector, true);
                 if (pinningPiece == null)
                 {
                     continue;
@@ -96,7 +96,7 @@ namespace UserInterface
             return true;
         }
 
-        public static Piece GetQueenVectoredAttackingPiece(Board board, Colour colour, int initialPosition, int vector)
+        public static Piece GetQueenVectoredAttackingPiece(Board board, Colour colour, int initialPosition, int vector, bool longRangeOnly = false)
         {
             var endOfVector = GetEndOfVector(board, colour, initialPosition, vector, true, true);
             var piece = board.GetPiece(endOfVector);
@@ -108,7 +108,7 @@ namespace UserInterface
             if (piece.GetType() != typeof(Queen)
                 && (piece.GetType() != typeof(Bishop) || !_diagonalVectors.Contains(vector))
                 && (piece.GetType() != typeof(Rook) || !_horizontalVectors.Contains(vector))
-                && (piece.GetType() != typeof(Pawn) || !_diagonalVectors.Contains(vector)))
+                && (longRangeOnly || piece.GetType() != typeof(Pawn) || !_diagonalVectors.Contains(vector)))
             {
                 return null;
             }

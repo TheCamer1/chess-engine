@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace UserInterface.Pieces
 {
-    public abstract class Piece
+    public abstract class Piece : ICloneable
     {
         public Colour Colour { get; set; }
         public Image Image { get; set; }
@@ -17,6 +17,15 @@ namespace UserInterface.Pieces
         {
             Colour = colour;
             Position = position;
+        }
+
+        public Piece(Piece piece)
+        {
+            Colour = piece.Colour;
+            Image = piece.Image;
+            MovedOn = piece.MovedOn;
+            AttackedSquares = new HashSet<int>(piece.AttackedSquares);
+            Position = piece.Position;
         }
 
         public virtual void SetAttackedSquares(Board board)
@@ -44,5 +53,7 @@ namespace UserInterface.Pieces
             var checkingPiece = checkingPieces.First();
             return ChessService.GetMovesToBlockCheck(board, possibleMovesIfPinned, kingPosition, checkingPiece);
         }
+
+        public abstract object Clone();
     }
 }

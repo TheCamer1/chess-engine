@@ -9,6 +9,8 @@ namespace UserInterface.Pieces
             Image = colour == Colour.Black ? Properties.Resources.BlackQueen : Properties.Resources.WhiteQueen;
         }
 
+        public Queen(Queen queen) : base(queen) { }
+
         public override List<int> GetAttackedSquares(Board board)
         {
             var queenMoves = ChessService.GetDiagonalMoves(board, Colour, Position, true);
@@ -21,6 +23,11 @@ namespace UserInterface.Pieces
             var queenMoves = ChessService.GetDiagonalMoves(board, Colour, Position);
             queenMoves.AddRange(ChessService.GetHorizontalMoves(board, Colour, Position));
             return queenMoves;
+        }
+
+        public override object Clone()
+        {
+            return new Queen(this);
         }
     }
 }
