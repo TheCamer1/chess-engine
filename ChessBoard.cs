@@ -169,7 +169,7 @@ namespace UserInterface
                 "a4a5",
                 "b7b6"
             };
-            var number = GetNumberOfPositions(_board, 2, new Stack<string>(), null, 2);
+            var number = GetNumberOfPositions(_board, 3, new Stack<string>(), null, 3);
             Console.WriteLine(number);
         }
 

@@ -9,7 +9,7 @@ namespace UserInterface
     {
         public Dictionary<int, Piece> PiecePositions { get; set; } = new Dictionary<int, Piece>();
         public Colour Perspective { get; }
-        public int CurrentPly { get; set; } = 1;
+        public int CurrentPly { get; set; } = 5;
         public Colour CurrentColour { get; set; } = Colour.White;
         public Dictionary<Colour, int> KingPositions { get; set; } = new Dictionary<Colour, int>();
 
@@ -195,10 +195,10 @@ namespace UserInterface
             {
                 PiecePositions[initialPosition + 3] = PiecePositions[initialPosition + 1];
                 PiecePositions.Remove(initialPosition + 1);
-                UpdatePieceAfterMoving(PiecePositions[initialPosition + 1], initialPosition + 1);
+                UpdatePieceAfterMoving(PiecePositions[initialPosition + 3], initialPosition + 3);
                 if (move.IsFirstMove)
                 {
-                    PiecePositions[initialPosition + 1].MovedOn = null;
+                    PiecePositions[initialPosition + 3].MovedOn = null;
                 }
             }
         }
@@ -223,15 +223,17 @@ namespace UserInterface
             PiecePositions[1] = new Knight(topColour, 1);
             PiecePositions[2] = new Bishop(topColour, 2);
             PiecePositions[3] = new Queen(topColour, 3);
-            PiecePositions[4] = new King(topColour, 4);
-            PiecePositions[5] = new Bishop(topColour, 5);
-            PiecePositions[6] = new Knight(topColour, 6);
+            PiecePositions[5] = new King(topColour, 5);
+            PiecePositions[5].MovedOn = 1;
+            PiecePositions[12] = new Bishop(topColour, 12);
+            PiecePositions[12].MovedOn = 1;
+            PiecePositions[53] = new Knight(topColour, 53);
+            PiecePositions[53].MovedOn = 1;
             PiecePositions[7] = new Rook(topColour, 7);
             PiecePositions[8] = new Pawn(topColour, 8);
             PiecePositions[9] = new Pawn(topColour, 9);
-            PiecePositions[10] = new Pawn(topColour, 10);
-            PiecePositions[11] = new Pawn(topColour, 11);
-            PiecePositions[12] = new Pawn(topColour, 12);
+            PiecePositions[18] = new Pawn(topColour, 18);
+            PiecePositions[18].MovedOn = 1;
             PiecePositions[13] = new Pawn(topColour, 13);
             PiecePositions[14] = new Pawn(topColour, 14);
             PiecePositions[15] = new Pawn(topColour, 15);
@@ -239,9 +241,8 @@ namespace UserInterface
             PiecePositions[48] = new Pawn(bottomColour, 48);
             PiecePositions[49] = new Pawn(bottomColour, 49);
             PiecePositions[50] = new Pawn(bottomColour, 50);
-            PiecePositions[51] = new Pawn(bottomColour, 51);
-            PiecePositions[52] = new Pawn(bottomColour, 52);
-            PiecePositions[53] = new Pawn(bottomColour, 53);
+            PiecePositions[11] = new Pawn(bottomColour, 11);
+            PiecePositions[11].MovedOn = 1;
             PiecePositions[54] = new Pawn(bottomColour, 54);
             PiecePositions[55] = new Pawn(bottomColour, 55);
             PiecePositions[56] = new Rook(bottomColour, 56);
@@ -249,12 +250,14 @@ namespace UserInterface
             PiecePositions[58] = new Bishop(bottomColour, 58);
             PiecePositions[59] = new Queen(bottomColour, 59);
             PiecePositions[60] = new King(bottomColour, 60);
-            PiecePositions[61] = new Bishop(bottomColour, 61);
-            PiecePositions[62] = new Knight(bottomColour, 62);
+            PiecePositions[34] = new Bishop(bottomColour, 34);
+            PiecePositions[34].MovedOn = 1;
+            PiecePositions[52] = new Knight(bottomColour, 52);
+            PiecePositions[52].MovedOn = 1;
             PiecePositions[63] = new Rook(bottomColour, 63);
 
             KingPositions[bottomColour] = 60;
-            KingPositions[topColour] = 4;
+            KingPositions[topColour] = 5;
         }
 
         private void PlacePieces(Colour colour, int startingPosition)
