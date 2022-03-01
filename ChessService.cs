@@ -13,11 +13,11 @@ namespace UserInterface
         public static readonly List<int> _queenVectors = new List<int> { -9, -7, 7, 9, -1, 1, -8, 8 };
         public static readonly List<int> _knightVectors = new List<int>() { -17, -15, -6, 10, 17, 15, 6, -10 };
 
-        public static List<int> GetMovesToBlockCheck(Board board, List<int> possibleMovesIfPinned, int kingPosition, Piece checkingPiece)
+        public static List<Move> GetMovesToBlockCheck(Board board, List<Move> possibleMovesIfPinned, int kingPosition, Piece checkingPiece)
         {
             var squaresAlongVector = GetSquaresAlongVectorUntilPiece(board, checkingPiece, kingPosition);
             return possibleMovesIfPinned
-                .Where(e => squaresAlongVector.Contains(e))
+                .Where(e => squaresAlongVector.Contains(e.FinalPosition))
                 .ToList();
         }
 
@@ -37,7 +37,7 @@ namespace UserInterface
             {
                 return direction * 7;
             }
-            return difference;
+            return direction;
         }
 
         public static List<int> GetSquaresAlongVectorUntilPiece(Board board, Piece piece, int initialPosition)
@@ -54,7 +54,7 @@ namespace UserInterface
             return squares;
         }
 
-        public static List<int> GetPossibleMovesIfPinned(Board board, Colour colour, List<int> possibleMoves, int initialPosition)
+        public static List<Move> GetPossibleMovesIfPinned(Board board, Colour colour, List<Move> possibleMoves, int initialPosition)
         {
             foreach (var vector in _queenVectors)
             {
@@ -72,12 +72,12 @@ namespace UserInterface
             return possibleMoves;
         }
 
-        public static List<int> GetPinnedPossibleMoves(List<int> possibleMoves, int initialPosition, int vector)
+        public static List<Move> GetPinnedPossibleMoves(List<Move> possibleMoves, int initialPosition, int vector)
         {
-            var pinnedPossibleMoves = new List<int>();
+            var pinnedPossibleMoves = new List<Move>();
             foreach (var possibleMove in possibleMoves)
             {
-                if ((possibleMove - initialPosition) % vector == 0)
+                if ((possibleMove.FinalPosition - initialPosition) % vector == 0 && (possibleMove.FinalPosition / 8 == initialPosition / 8 || Math.Abs(vector) != 1))
                 {
                     pinnedPossibleMoves.Add(possibleMove);
                 }
@@ -126,9 +126,9 @@ namespace UserInterface
             return testingPosition;
         }
 
-        public static List<int> GetDiagonalMoves(Board board, Colour colour, int position, bool includeOwnPieces = false)
+        public static List<Move> GetDiagonalMoves(Board board, Colour colour, int position, bool includeOwnPieces = false)
         {
-            var possibleMoves = new List<int>();
+            var possibleMoves = new List<Move>();
             foreach (var vector in _diagonalVectors)
             {
                 AddVectorToPossibleMoves(board, colour, position, possibleMoves, vector, includeOwnPieces);
@@ -136,9 +136,9 @@ namespace UserInterface
             return possibleMoves;
         }
 
-        public static List<int> GetHorizontalMoves(Board board, Colour colour, int position, bool includeOwnPieces = false)
+        public static List<Move> GetHorizontalMoves(Board board, Colour colour, int position, bool includeOwnPieces = false)
         {
-            var possibleMoves = new List<int>();
+            var possibleMoves = new List<Move>();
             foreach (var vector in _horizontalVectors)
             {
                 AddVectorToPossibleMoves(board, colour, position, possibleMoves, vector, includeOwnPieces);
@@ -146,25 +146,35 @@ namespace UserInterface
             return possibleMoves;
         }
 
-        public static void AddVectorToPossibleMoves(Board board, Colour colour, int initialPosition, List<int> possibleMoves, int vector, bool includeOwnPieces = false)
+        public static void AddVectorToPossibleMoves(Board board, Colour colour, int initialPosition, List<Move> possibleMoves, int vector, bool includeOwnPieces = false)
         {
             var testingPosition = initialPosition;
             while (IsNextSquareValid(board, colour, initialPosition, testingPosition, vector, includeOwnPieces))
             {
                 testingPosition += vector;
-                possibleMoves.Add(testingPosition);
+                possibleMoves.Add(GetMove(board, initialPosition, testingPosition));
             }
         }
 
-        public static void AddStepsToPossibleMoves(Board board, Colour colour, int initialPosition, List<int> possibleMoves, List<int> steps, bool includeOwnPieces = false)
+        public static void AddStepsToPossibleMoves(Board board, Colour colour, int initialPosition, List<Move> possibleMoves, List<int> steps, bool includeOwnPieces = false)
         {
             foreach (var step in steps)
             {
                 if (IsNextSquareValid(board, colour, initialPosition, initialPosition, step, includeOwnPieces))
                 {
-                    possibleMoves.Add(initialPosition + step);
+                    possibleMoves.Add(GetMove(board, initialPosition, initialPosition + step));
                 }
             }
+        }
+
+        public static Move GetMove(Board board, int initialPosition, int finalPosition)
+        {
+            var piece = board.PiecePositions[initialPosition];
+            var move = new Move(piece, finalPosition)
+            {
+                CapturedPiece = board.GetPiece(finalPosition)
+            };
+            return move;
         }
 
         public static bool IsNextSquareValid(Board board, Colour colour, int initialPosition, int testingPosition, int vector, bool includeOwnPieces = false, bool excludeKings = false)
@@ -178,7 +188,7 @@ namespace UserInterface
                 && (includeOwnPieces || newPiece == null || newPiece.Colour != colour)
                 && (testingPiece == null 
                     || testingPosition == initialPosition 
-                    || (excludeKings && testingPiece is King && testingPiece.Colour != colour));
+                    || (!excludeKings && testingPiece is King && testingPiece.Colour != colour));
         }
 
         public static Point GetPointFromPosition(int position)

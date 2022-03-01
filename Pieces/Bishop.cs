@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace UserInterface.Pieces
 {
@@ -9,21 +10,14 @@ namespace UserInterface.Pieces
             Image = colour == Colour.Black ? Properties.Resources.BlackBishop : Properties.Resources.WhiteBishop;
         }
 
-        public Bishop(Bishop bishop) : base(bishop) { }
-
         public override List<int> GetAttackedSquares(Board board)
         {
-            return ChessService.GetDiagonalMoves(board, Colour, Position, true);
+            return ChessService.GetDiagonalMoves(board, Colour, Position, true).Select(e => e.FinalPosition).ToList();
         }
 
-        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board)
+        public override List<Move> GetPossibleMovesIgnoringCheckRules(Board board)
         {
             return ChessService.GetDiagonalMoves(board, Colour, Position);
-        }
-
-        public override object Clone()
-        {
-            return new Bishop(this);
         }
     }
 }

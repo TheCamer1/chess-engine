@@ -49,6 +49,7 @@
     <Compile Include="Board.cs" />
     <Compile Include="ChessService.cs" />
     <Compile Include="Colour.cs" />
+    <Compile Include="Move.cs" />
     <Compile Include="Pieces\Piece.cs" />
     <Compile Include="Pieces\Bishop.cs" />
     <Compile Include="Pieces\Knight.cs" />

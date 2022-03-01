@@ -12,25 +12,23 @@ namespace UserInterface.Pieces
             Image = colour == Colour.Black ? Properties.Resources.BlackKing : Properties.Resources.WhiteKing;
         }
 
-        public King(King king) : base(king) { }
-
         public override List<int> GetAttackedSquares(Board board)
         {
-            var possibleMoves = new List<int>();
+            var possibleMoves = new List<Move>();
             ChessService.AddStepsToPossibleMoves(board, Colour, Position, possibleMoves, _possibleSteps, true);
-            return possibleMoves;
+            return possibleMoves.Select(e => e.FinalPosition).ToList();
         }
 
-        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board)
+        public override List<Move> GetPossibleMovesIgnoringCheckRules(Board board)
         {
-            var possibleMoves = new List<int>();
+            var possibleMoves = new List<Move>();
             ChessService.AddStepsToPossibleMoves(board, Colour, Position, possibleMoves, _possibleSteps);
             return possibleMoves;
         }
 
-        private List<int> GetPossibleCastlingMoves(Board board)
+        private List<Move> GetPossibleCastlingMoves(Board board)
         {
-            var castlingMoves = new List<int>();
+            var castlingMoves = new List<Move>();
             if (MovedOn != null)
             {
                 return castlingMoves;
@@ -57,18 +55,20 @@ namespace UserInterface.Pieces
             return castlingMoves;
         }
 
-        private void AddCastlingMove(Board board, int castlingPosition, int rookPosition, List<int> castlingMoves, HashSet<int> emptySquares, HashSet<int> nonAttackedSquares, Colour oppositeColour)
+        private void AddCastlingMove(Board board, int castlingPosition, int rookPosition, List<Move> castlingMoves, HashSet<int> emptySquares, HashSet<int> nonAttackedSquares, Colour oppositeColour)
         {
             if (board.GetPiece(rookPosition)?.MovedOn == null
                 && !board.IsKingInCheck(Colour)
                 && nonAttackedSquares.All(e => !board.IsSquareAttacked(oppositeColour, e))
                 && emptySquares.All(e => board.GetPiece(e) == null))
             {
-                castlingMoves.Add(castlingPosition);
+                var move = ChessService.GetMove(board, Position, castlingPosition);
+                move.IsCastling = true;
+                castlingMoves.Add(move);
             }
         }
 
-        public override List<int> GetPossibleMoves(Board board)
+        public override List<Move> GetPossibleMoves(Board board)
         {
             var possibleMoves = GetPossibleCastlingMoves(board);
             foreach (var step in _possibleSteps)
@@ -77,15 +77,10 @@ namespace UserInterface.Pieces
                 if (ChessService.IsNextSquareValid(board, Colour, Position, Position, step) 
                     && !board.IsSquareAttacked(ChessService.GetOppositeColour(Colour), newPosition))
                 {
-                    possibleMoves.Add(newPosition);
+                    possibleMoves.Add(ChessService.GetMove(board, Position, newPosition));
                 }
             }
             return possibleMoves;
-        }
-
-        public override object Clone()
-        {
-            return new King(this);
         }
     }
 }

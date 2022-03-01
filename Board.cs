@@ -9,7 +9,7 @@ namespace UserInterface
     {
         public Dictionary<int, Piece> PiecePositions { get; set; } = new Dictionary<int, Piece>();
         public Colour Perspective { get; }
-        public int CurrentPly { get; set; } = 0;
+        public int CurrentPly { get; set; } = 1;
         public Colour CurrentColour { get; set; } = Colour.White;
         public Dictionary<Colour, int> KingPositions { get; set; } = new Dictionary<Colour, int>();
 
@@ -21,15 +21,6 @@ namespace UserInterface
             {
                 piece.Value.SetAttackedSquares(this);
             }
-        }
-
-        public Board(Board board)
-        {
-            PiecePositions = board.PiecePositions.ToDictionary(e => e.Key, e => (Piece)e.Value.Clone());
-            Perspective = board.Perspective;
-            CurrentPly = board.CurrentPly;
-            CurrentColour = board.CurrentColour;
-            KingPositions = new Dictionary<Colour, int>(board.KingPositions);
         }
 
         public bool IsKingInCheck(Colour colour)
@@ -67,29 +58,65 @@ namespace UserInterface
                 .ToList();
         }
 
-        public void MovePiece(int selectedPiecePosition, int selectedPosition)
+        public void MakeMove(Move move)
         {
-            var selectedPiece = GetPiece(selectedPiecePosition);
-
-            PerformEnPassantCapture(selectedPiecePosition, selectedPosition, selectedPiece);
-            PerformCastlingRookMove(selectedPiecePosition, selectedPosition, selectedPiece);
-            SetPawnTwoStepMovePerformedOn(selectedPiecePosition, selectedPosition, selectedPiece);
-
-            PiecePositions.Remove(selectedPiecePosition);
-            PiecePositions[selectedPosition] = selectedPiece;
-            Promotion(selectedPosition, selectedPiece);
-
-            if (selectedPiece is King)
+            if (move.IsEnPassant)
             {
-                KingPositions[selectedPiece.Colour] = selectedPosition;
+                PiecePositions.Remove(move.CapturedPiece.Position);
+            }
+            PerformCastlingRookMove(move.Piece.Position, move.FinalPosition, move.Piece);
+            SetPawnTwoStepMovePerformedOn(move.Piece.Position, move.FinalPosition, move.Piece);
+
+            PiecePositions.Remove(move.Piece.Position);
+            PiecePositions[move.FinalPosition] = move.Piece;
+            Promotion(move.FinalPosition, move.Piece);
+
+            if (move.Piece is King)
+            {
+                KingPositions[move.Piece.Colour] = move.FinalPosition;
             }
 
-            selectedPiece.MovedOn = CurrentPly;
-            selectedPiece.Position = selectedPosition;
-            SetPieceAndLongRangePieceAttackedSquares(selectedPiece);
+            UpdatePieceAfterMoving(move.Piece, move.FinalPosition);
 
             CurrentPly += 1;
             CurrentColour = ChessService.GetOppositeColour(CurrentColour);
+        }
+
+        public void UpdatePieceAfterMoving(Piece piece, int finalPosition)
+        {
+            piece.MovedOn = CurrentPly;
+            piece.Position = finalPosition;
+            SetPieceAndLongRangePieceAttackedSquares(piece);
+        }
+
+        public void UnmakeMove(Move move)
+        {
+            CurrentPly -= 1;
+            CurrentColour = ChessService.GetOppositeColour(CurrentColour);
+
+            if (move.IsEnPassant || move.CapturedPiece == null)
+            {
+                PiecePositions.Remove(move.FinalPosition);
+            }
+            UnperformCastlingRookMove(move.InitialPosition, move.FinalPosition, move.Piece, move);
+            UnsetPawnTwoStepMovePerformedOn(move.InitialPosition, move.FinalPosition, move.Piece);
+
+            if (move.CapturedPiece != null)
+            {
+                PiecePositions[move.CapturedPiece.Position] = move.CapturedPiece;
+            }
+            PiecePositions[move.InitialPosition] = move.Piece;
+
+            if (move.Piece is King)
+            {
+                KingPositions[move.Piece.Colour] = move.InitialPosition;
+            }
+
+            UpdatePieceAfterMoving(move.Piece, move.InitialPosition);
+            if (move.IsFirstMove)
+            {
+                move.Piece.MovedOn = null;
+            }
         }
 
         private void SetPieceAndLongRangePieceAttackedSquares(Piece selectedPiece)
@@ -110,30 +137,69 @@ namespace UserInterface
             }
         }
 
-        private void SetPawnTwoStepMovePerformedOn(int selectedPiecePosition, int selectedPosition, Piece selectedPiece)
+        private void SetPawnTwoStepMovePerformedOn(int initialPosition, int finalPosition, Piece selectedPiece)
         {
-            if (selectedPiece.GetType() != typeof(Pawn) || (selectedPiecePosition - selectedPosition) % 8 != 0)
+            if (selectedPiece.GetType() != typeof(Pawn) || Math.Abs(initialPosition - finalPosition) != 16)
             {
                 return;
             }
             ((Pawn)selectedPiece).TwoStepMovePerformedOn = CurrentPly;
         }
 
-        private void PerformCastlingRookMove(int selectedPiecePosition, int selectedPosition, Piece selectedPiece)
+        private void PerformCastlingRookMove(int initialPosition, int finalPosition, Piece selectedPiece)
         {
-            if (selectedPiece.GetType() != typeof(King) || Math.Abs(selectedPiecePosition - selectedPosition) != 2)
+            if (selectedPiece.GetType() != typeof(King) || Math.Abs(initialPosition - finalPosition) != 2)
             {
                 return;
             }
-            if (selectedPiecePosition - selectedPosition > 0)
+            if (initialPosition - finalPosition > 0)
             {
-                PiecePositions[selectedPiecePosition - 1] = PiecePositions[selectedPiecePosition - 4];
-                PiecePositions.Remove(selectedPiecePosition - 4);
+                PiecePositions[initialPosition - 1] = PiecePositions[initialPosition - 4];
+                PiecePositions.Remove(initialPosition - 4);
+                UpdatePieceAfterMoving(PiecePositions[initialPosition - 1], initialPosition - 1);
             }
             else
             {
-                PiecePositions[selectedPiecePosition + 1] = PiecePositions[selectedPiecePosition + 3];
-                PiecePositions.Remove(selectedPiecePosition + 3);
+                PiecePositions[initialPosition + 1] = PiecePositions[initialPosition + 3];
+                PiecePositions.Remove(initialPosition + 3);
+                UpdatePieceAfterMoving(PiecePositions[initialPosition + 1], initialPosition + 1);
+            }
+        }
+
+        private void UnsetPawnTwoStepMovePerformedOn(int initialPosition, int finalPosition, Piece selectedPiece)
+        {
+            if (selectedPiece.GetType() != typeof(Pawn) || Math.Abs(initialPosition - finalPosition) != 16)
+            {
+                return;
+            }
+            ((Pawn)selectedPiece).TwoStepMovePerformedOn = null;
+        }
+
+        private void UnperformCastlingRookMove(int initialPosition, int finalPosition, Piece selectedPiece, Move move)
+        {
+            if (selectedPiece.GetType() != typeof(King) || Math.Abs(initialPosition - finalPosition) != 2)
+            {
+                return;
+            }
+            if (initialPosition - finalPosition > 0)
+            {
+                PiecePositions[initialPosition - 4] = PiecePositions[initialPosition - 1];
+                PiecePositions.Remove(initialPosition - 1);
+                UpdatePieceAfterMoving(PiecePositions[initialPosition - 4], initialPosition - 4);
+                if (move.IsFirstMove)
+                {
+                    PiecePositions[initialPosition - 4].MovedOn = null;
+                }
+            }
+            else
+            {
+                PiecePositions[initialPosition + 3] = PiecePositions[initialPosition + 1];
+                PiecePositions.Remove(initialPosition + 1);
+                UpdatePieceAfterMoving(PiecePositions[initialPosition + 1], initialPosition + 1);
+                if (move.IsFirstMove)
+                {
+                    PiecePositions[initialPosition + 1].MovedOn = null;
+                }
             }
         }
 
@@ -146,26 +212,6 @@ namespace UserInterface
                     MovedOn = selectedPiece.MovedOn
                 };
                 PiecePositions[selectedPosition] = newQueen;
-            }
-        }
-
-        private void PerformEnPassantCapture(int selectedPiecePosition, int selectedPosition, Piece selectedPiece)
-        {
-            if (selectedPiece is Pawn
-                && (selectedPiecePosition - selectedPosition) % 8 != 0
-                && GetPiece(selectedPosition) == null)
-            {
-                var vector = selectedPiecePosition - selectedPosition;
-                int capturedPawnPosition;
-                if (Math.Abs(vector) == 9)
-                {
-                    capturedPawnPosition = selectedPiecePosition - (vector / Math.Abs(vector));
-                }
-                else
-                {
-                    capturedPawnPosition = selectedPiecePosition + (vector / Math.Abs(vector));
-                }
-                PiecePositions.Remove(capturedPawnPosition);
             }
         }
 
@@ -190,7 +236,7 @@ namespace UserInterface
             PiecePositions[14] = new Pawn(topColour, 14);
             PiecePositions[15] = new Pawn(topColour, 15);
 
-            PiecePositions[32] = new Pawn(bottomColour, 32);
+            PiecePositions[48] = new Pawn(bottomColour, 48);
             PiecePositions[49] = new Pawn(bottomColour, 49);
             PiecePositions[50] = new Pawn(bottomColour, 50);
             PiecePositions[51] = new Pawn(bottomColour, 51);

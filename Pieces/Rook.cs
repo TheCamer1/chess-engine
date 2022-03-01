@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace UserInterface.Pieces
 {
@@ -9,21 +10,14 @@ namespace UserInterface.Pieces
             Image = colour == Colour.Black ? Properties.Resources.BlackRook : Properties.Resources.WhiteRook;
         }
 
-        public Rook(Rook rook) : base(rook) { }
-
         public override List<int> GetAttackedSquares(Board board)
         {
-            return ChessService.GetHorizontalMoves(board, Colour, Position, true);
+            return ChessService.GetHorizontalMoves(board, Colour, Position, true).Select(e => e.FinalPosition).ToList();
         }
 
-        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board)
+        public override List<Move> GetPossibleMovesIgnoringCheckRules(Board board)
         {
             return ChessService.GetHorizontalMoves(board, Colour, Position);
-        }
-
-        public override object Clone()
-        {
-            return new Rook(this);
         }
     }
 }

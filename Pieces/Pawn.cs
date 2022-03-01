@@ -11,11 +11,6 @@ namespace UserInterface.Pieces
             Image = colour == Colour.Black ? Properties.Resources.BlackPawn : Properties.Resources.WhitePawn;
         }
 
-        public Pawn(Pawn pawn) : base(pawn) 
-        {
-            TwoStepMovePerformedOn = pawn.TwoStepMovePerformedOn;
-        }
-
         public override List<int> GetAttackedSquares(Board board)
         {
             var direction = board.Perspective == Colour ? -1 : 1;
@@ -31,30 +26,28 @@ namespace UserInterface.Pieces
             return possibleChecks;
         }
 
-        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board)
+        public override List<Move> GetPossibleMovesIgnoringCheckRules(Board board)
         {
-            var possibleMoves = new List<int>();
+            var possibleMoves = new List<Move>();
             var direction = board.Perspective == Colour ? -1 : 1;
 
             AddPushesToPossibleMoves(board, possibleMoves, direction);
 
-            var possibleCaptures = new List<int>();
-            AddDirectCapturingStep(board, possibleCaptures, direction, 9);
-            AddDirectCapturingStep(board, possibleCaptures, direction, 7);
-            AddEnPassantCapturingStep(board, possibleCaptures, direction, 9, 1);
-            AddEnPassantCapturingStep(board, possibleCaptures, direction, 7, -1);
+            AddDirectCapturingStep(board, possibleMoves, direction, 9);
+            AddDirectCapturingStep(board, possibleMoves, direction, 7);
+            AddEnPassantCapturingStep(board, possibleMoves, direction, 9, 1);
+            AddEnPassantCapturingStep(board, possibleMoves, direction, 7, -1);
 
-            ChessService.AddStepsToPossibleMoves(board, Colour, Position, possibleMoves, possibleCaptures);
             return possibleMoves;
         }
 
-        private void AddPushesToPossibleMoves(Board board, List<int> possibleMoves, int direction)
+        private void AddPushesToPossibleMoves(Board board, List<Move> possibleMoves, int direction)
         {
             var firstStepSquare = Position + direction * 8;
             var pieceAtFirstStep = board.GetPiece(firstStepSquare);
             if (firstStepSquare >= 0 && firstStepSquare < 64 && pieceAtFirstStep == null)
             {
-                possibleMoves.Add(firstStepSquare);
+                possibleMoves.Add(ChessService.GetMove(board, Position, firstStepSquare));
             }
 
             var secondStepSquare = Position + direction * 16;
@@ -65,11 +58,11 @@ namespace UserInterface.Pieces
                 && pieceAtFirstStep == null 
                 && pieceAtSecondStep == null)
             {
-                possibleMoves.Add(secondStepSquare);
+                possibleMoves.Add(ChessService.GetMove(board, Position, secondStepSquare));
             }
         }
 
-        private void AddDirectCapturingStep(Board board, List<int> possibleSteps, int direction, int step)
+        private void AddDirectCapturingStep(Board board, List<Move> possibleMoves, int direction, int step)
         {
             if (!ChessService.IsNextSquareValid(board, Colour, Position, Position, step * direction))
             {
@@ -77,13 +70,14 @@ namespace UserInterface.Pieces
             }
             var testingPosition = Position + direction * step;
             var capturablePiece = board.GetPiece(testingPosition);
-            if (capturablePiece != null && capturablePiece.Colour != Colour)
+            if (capturablePiece != null 
+                && capturablePiece.Colour != Colour)
             {
-                possibleSteps.Add(direction * step);
+                possibleMoves.Add(ChessService.GetMove(board, Position, Position + direction * step));
             }
         }
 
-        private void AddEnPassantCapturingStep(Board board, List<int> possibleSteps, int direction, int step, int capturablePieceStep)
+        private void AddEnPassantCapturingStep(Board board, List<Move> possibleMoves, int direction, int step, int capturablePieceStep)
         {
             if (!ChessService.IsNextSquareValid(board, Colour, Position, Position, step * direction))
             {
@@ -97,7 +91,10 @@ namespace UserInterface.Pieces
                 && ((Pawn)capturablePiece).TwoStepMovePerformedOn == board.CurrentPly - 1
                 && !IsPinnedFromEnPassant(board, capturablePiecePosition))
             {
-                possibleSteps.Add(direction * step);
+                var move = ChessService.GetMove(board, Position, Position + direction * step);
+                move.IsEnPassant = true;
+                move.CapturedPiece = capturablePiece;
+                possibleMoves.Add(move);
             }
         }
 
@@ -119,11 +116,6 @@ namespace UserInterface.Pieces
                 return true;
             }
             return false;
-        }
-
-        public override object Clone()
-        {
-            return new Pawn(this);
         }
     }
 }

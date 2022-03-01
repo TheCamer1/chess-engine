@@ -14,14 +14,36 @@ namespace UserInterface
         private const int _gridSize = 8;
 
         private Board _board = new Board(Colour.White);
-        private List<int> _potentialMoves = new List<int>();
+        private List<Move> _potentialMoves = new List<Move>();
         private int? _selectedPiecePosition;
+        private Stack<Move> _moves = new Stack<Move>();
 
         private Panel[,] _panels = new Panel[_gridSize, _gridSize];
 
         public ChessBoard()
         {
             InitializeComponent();
+            KeyDown += ChessBoard_KeyDown;
+            KeyPreview = true;
+        }
+
+        private void ChessBoard_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.M)
+            {
+                RunNumberOfPositions(sender, e);
+            }
+            if (e.KeyCode == Keys.Left)
+            {
+                if (!_moves.Any())
+                {
+                    return;
+                }
+                var move = _moves.Pop();
+                _board.UnmakeMove(move);
+                _potentialMoves.Clear();
+                RedrawBoard();
+            }
         }
 
         private void LoadChessBoard(object sender, EventArgs e)
@@ -100,15 +122,15 @@ namespace UserInterface
                 {
                     continue;
                 }
-                wait(100);
+                Wait(100);
                 int moveNumber = random.Next(0, possibleMoves.Count() - 1);
                 var move = possibleMoves[moveNumber];
-                _board.MovePiece(piece.Key, move);
+                _board.MakeMove(move);
                 RedrawBoard();
             }
         }
 
-        public void wait(int milliseconds)
+        public void Wait(int milliseconds)
         {
             var timer1 = new System.Windows.Forms.Timer();
             if (milliseconds == 0 || milliseconds < 0) return;
@@ -140,38 +162,46 @@ namespace UserInterface
                 .Any();
         }
 
-        private void OnPanelClick(object sender, EventArgs e)
+        private void RunNumberOfPositions(object sender, EventArgs e)
         {
-            var number = GetNumberOfPositions(_board, 2, true);
+            var sequence = new List<string>
+            {
+                "a4a5",
+                "b7b6"
+            };
+            var number = GetNumberOfPositions(_board, 2, new Stack<string>(), null, 2);
             Console.WriteLine(number);
-            //for (var i = 1; i < 10; i++)
-            //{
-            //    var number = GetNumberOfPositions(_board, i, true);
-            //    Console.WriteLine(number);
-            //}
         }
 
-        private int GetNumberOfPositions(Board board, int depth, bool printPositions = false)
+        private int GetNumberOfPositions(Board board, int depth, Stack<string> moveHistory, List<string> desiredMoves = null, int? depthToPrintPositions = null)
         {
             if (depth == 0)
             {
                 return 1;
             }
             var numberOfMoves = 0;
-            var pieces = board.PiecePositions.Values.Where(e => e.Colour == board.CurrentColour);
-            foreach (var piece in pieces)
+            var pieces = board
+                .PiecePositions
+                .Values
+                .Where(e => e.Colour == board.CurrentColour)
+                .ToList();
+            for (var i = 0; i < pieces.Count(); i++)
             {
+                var piece = pieces[i];
                 var moves = piece.GetPossibleMoves(board);
                 foreach (var move in moves)
                 {
-                    var newBoard = new Board(board);
-                    newBoard.MovePiece(piece.Position, move);
-                    var moveCount = GetNumberOfPositions(newBoard, depth - 1);
+                    board.MakeMove(move);
+                    var position = GetPgn(move.InitialPosition, move.FinalPosition);
+                    moveHistory.Push(position);
+                    var moveCount = GetNumberOfPositions(board, depth - 1, moveHistory, desiredMoves, depthToPrintPositions);
                     numberOfMoves += moveCount;
-                    if (printPositions)
+                    moveHistory.Pop();
+                    if (desiredMoves != null && moveHistory.SequenceEqual(desiredMoves) || depthToPrintPositions == depth)
                     {
-                        Console.WriteLine(GetPgn(piece.Position, move) + ": " + moveCount);
+                        Console.WriteLine(position + ": " + moveCount);
                     }
+                    board.UnmakeMove(move);
                 }
             }
             return numberOfMoves;
@@ -189,7 +219,7 @@ namespace UserInterface
             return first + second;
         }
 
-        private void OnPanelClick2(object sender, EventArgs e)
+        private void OnPanelClick(object sender, EventArgs ev)
         {
             Panel panel = sender as Panel;
             RedrawBoard();
@@ -197,15 +227,18 @@ namespace UserInterface
             int selectedPosition = GetPanelPosition(panel);
 
             //check if square is highlighted and if is, moves selected piece
-            if (_potentialMoves.Contains(selectedPosition))
+            if (_potentialMoves.Select(e => e.FinalPosition).Contains(selectedPosition))
             {
                 if (_selectedPiecePosition == null)
                 {
                     throw new Exception("Piece is not selected");
                 }
                 CheckForEndOfGame(selectedPosition);
-                _board.MovePiece(_selectedPiecePosition.Value, selectedPosition);
+                var move = _potentialMoves.Where(e => e.FinalPosition == selectedPosition).First();
+                _board.MakeMove(move);
                 _potentialMoves.Clear();
+                _moves.Push(move);
+
                 RedrawBoard();
                 return;
             }
@@ -227,7 +260,7 @@ namespace UserInterface
             // colors in potential panels
             foreach (var potentialMove in _potentialMoves)
             {
-                var potentialMoveCoordinates = ChessService.GetPointFromPosition(potentialMove);
+                var potentialMoveCoordinates = ChessService.GetPointFromPosition(potentialMove.FinalPosition);
                 _panels[potentialMoveCoordinates.X, potentialMoveCoordinates.Y].BackColor = Color.LightBlue;
             }
         }

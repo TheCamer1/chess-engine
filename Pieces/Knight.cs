@@ -12,25 +12,18 @@ namespace UserInterface.Pieces
             Image = colour == Colour.Black ? Properties.Resources.BlackKnight : Properties.Resources.WhiteKnight;
         }
 
-        public Knight(Knight knight) : base(knight) { }
-
         public override List<int> GetAttackedSquares(Board board)
         {
-            var possibleMoves = new List<int>();
+            var possibleMoves = new List<Move>();
             ChessService.AddStepsToPossibleMoves(board, Colour, Position, possibleMoves, _possibleSteps, true);
-            return possibleMoves;
+            return possibleMoves.Select(e => e.FinalPosition).ToList();
         }
 
-        public override List<int> GetPossibleMovesIgnoringCheckRules(Board board)
+        public override List<Move> GetPossibleMovesIgnoringCheckRules(Board board)
         {
-            var possibleMoves = new List<int>();
+            var possibleMoves = new List<Move>();
             ChessService.AddStepsToPossibleMoves(board, Colour, Position, possibleMoves, _possibleSteps);
             return possibleMoves;
-        }
-
-        public override object Clone()
-        {
-            return new Knight(this);
         }
     }
 }

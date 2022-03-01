@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace UserInterface.Pieces
 {
-    public abstract class Piece : ICloneable
+    public abstract class Piece
     {
         public Colour Colour { get; set; }
         public Image Image { get; set; }
@@ -19,24 +19,15 @@ namespace UserInterface.Pieces
             Position = position;
         }
 
-        public Piece(Piece piece)
-        {
-            Colour = piece.Colour;
-            Image = piece.Image;
-            MovedOn = piece.MovedOn;
-            AttackedSquares = new HashSet<int>(piece.AttackedSquares);
-            Position = piece.Position;
-        }
-
         public virtual void SetAttackedSquares(Board board)
         {
             AttackedSquares = new HashSet<int>(GetAttackedSquares(board));
         }
 
         public abstract List<int> GetAttackedSquares(Board board);
-        public abstract List<int> GetPossibleMovesIgnoringCheckRules(Board board);
+        public abstract List<Move> GetPossibleMovesIgnoringCheckRules(Board board);
 
-        public virtual List<int> GetPossibleMoves(Board board)
+        public virtual List<Move> GetPossibleMoves(Board board)
         {
             var possibleMoves = GetPossibleMovesIgnoringCheckRules(board);
             var possibleMovesIfPinned = ChessService.GetPossibleMovesIfPinned(board, Colour, possibleMoves, Position);
@@ -48,12 +39,10 @@ namespace UserInterface.Pieces
             var checkingPieces = board.GetAttackingPieces(ChessService.GetOppositeColour(Colour), kingPosition);
             if (checkingPieces.Count > 1)
             {
-                return new List<int>();
+                return new List<Move>();
             }
             var checkingPiece = checkingPieces.First();
             return ChessService.GetMovesToBlockCheck(board, possibleMovesIfPinned, kingPosition, checkingPiece);
         }
-
-        public abstract object Clone();
     }
 }
