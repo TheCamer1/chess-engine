@@ -9,6 +9,7 @@ namespace UserInterface.Pieces
         public Pawn(Colour colour, int position) : base(colour, position)
         {
             Image = colour == Colour.Black ? Properties.Resources.BlackPawn : Properties.Resources.WhitePawn;
+            PieceType = PieceType.Pawn;
         }
 
         public override List<int> GetAttackedSquares(Board board)

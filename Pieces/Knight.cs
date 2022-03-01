@@ -10,6 +10,7 @@ namespace UserInterface.Pieces
         public Knight(Colour colour, int position) : base(colour, position)
         {
             Image = colour == Colour.Black ? Properties.Resources.BlackKnight : Properties.Resources.WhiteKnight;
+            PieceType = PieceType.Knight;
         }
 
         public override List<int> GetAttackedSquares(Board board)

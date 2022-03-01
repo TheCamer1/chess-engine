@@ -8,3 +8,13 @@ C:\Code\Personal\chess-engine\obj\Debug\UserInterface.Properties.Resources.resou
 C:\Code\Personal\chess-engine\obj\Debug\UserInterface.exe
 C:\Code\Personal\chess-engine\obj\Debug\UserInterface.pdb
 C:\Code\Personal\chess-engine\obj\Debug\UserInterface.csproj.AssemblyReference.cache
+C:\Code\chess-engine\bin\Debug\UserInterface.exe.config
+C:\Code\chess-engine\bin\Debug\UserInterface.exe
+C:\Code\chess-engine\bin\Debug\UserInterface.pdb
+C:\Code\chess-engine\obj\Debug\UserInterface.csproj.AssemblyReference.cache
+C:\Code\chess-engine\obj\Debug\UserInterface.ChessBoard.resources
+C:\Code\chess-engine\obj\Debug\UserInterface.Properties.Resources.resources
+C:\Code\chess-engine\obj\Debug\UserInterface.csproj.GenerateResource.cache
+C:\Code\chess-engine\obj\Debug\UserInterface.csproj.CoreCompileInputs.cache
+C:\Code\chess-engine\obj\Debug\UserInterface.exe
+C:\Code\chess-engine\obj\Debug\UserInterface.pdb

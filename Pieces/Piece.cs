@@ -12,6 +12,7 @@ namespace UserInterface.Pieces
         public int? MovedOn { get; set; }
         public HashSet<int> AttackedSquares { get; set; }
         public int Position { get; set; }
+        public PieceType PieceType { get; set; }
 
         public Piece(Colour colour, int position)
         {
