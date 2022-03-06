@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace UserInterface.Pieces
 {
@@ -48,19 +49,48 @@ namespace UserInterface.Pieces
             var pieceAtFirstStep = board.GetPiece(firstStepSquare);
             if (firstStepSquare >= 0 && firstStepSquare < 64 && pieceAtFirstStep == null)
             {
+                if (Position / 8 == 1 && direction < 0 || Position / 8 == 6 && direction > 0)
+                {
+                    AddPromotionsToPossbleMoves(board, possibleMoves, firstStepSquare);
+                    return;
+                }
                 possibleMoves.Add(ChessService.GetMove(board, Position, firstStepSquare));
             }
 
             var secondStepSquare = Position + direction * 16;
             var pieceAtSecondStep = board.GetPiece(secondStepSquare);
-            if (MovedOn == null 
-                && secondStepSquare >= 0 
-                && secondStepSquare < 64 
-                && pieceAtFirstStep == null 
+            if (!HasMoved
+                && secondStepSquare >= 0
+                && secondStepSquare < 64
+                && pieceAtFirstStep == null
                 && pieceAtSecondStep == null)
             {
                 possibleMoves.Add(ChessService.GetMove(board, Position, secondStepSquare));
             }
+        }
+
+        private void AddPromotionsToPossbleMoves(Board board, List<Move> possibleMoves, int firstStepSquare)
+        {
+            var pieces = new List<Piece>()
+            {
+                new Queen(Colour, firstStepSquare),
+                new Rook(Colour, firstStepSquare),
+                new Bishop(Colour, firstStepSquare),
+                new Knight(Colour, firstStepSquare)
+            };
+            pieces.ForEach(e =>
+            {
+                e.HasMoved = HasMoved;
+            });
+
+            var moves = pieces
+                .Select(e =>
+                {
+                    var move = ChessService.GetMove(board, Position, firstStepSquare);
+                    move.PromotionPiece = e;
+                    return move;
+                });
+            possibleMoves.AddRange(moves);
         }
 
         private void AddDirectCapturingStep(Board board, List<Move> possibleMoves, int direction, int step)
@@ -71,9 +101,14 @@ namespace UserInterface.Pieces
             }
             var testingPosition = Position + direction * step;
             var capturablePiece = board.GetPiece(testingPosition);
-            if (capturablePiece != null 
+            if (capturablePiece != null
                 && capturablePiece.Colour != Colour)
             {
+                if (Position / 8 == 1 && direction < 0 || Position / 8 == 6 && direction > 0)
+                {
+                    AddPromotionsToPossbleMoves(board, possibleMoves, Position + step * direction);
+                    return;
+                }
                 possibleMoves.Add(ChessService.GetMove(board, Position, Position + direction * step));
             }
         }
@@ -108,7 +143,7 @@ namespace UserInterface.Pieces
                 {
                     continue;
                 }
-                var pinningPiece = ChessService.GetQueenVectoredAttackingPiece(board, Colour, Position, -vector) 
+                var pinningPiece = ChessService.GetQueenVectoredAttackingPiece(board, Colour, Position, -vector)
                     ?? ChessService.GetQueenVectoredAttackingPiece(board, Colour, capturablePosition, -vector);
                 if (pinningPiece == null)
                 {

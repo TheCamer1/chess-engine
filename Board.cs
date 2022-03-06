@@ -69,14 +69,14 @@ namespace UserInterface
 
             PiecePositions.Remove(move.Piece.Position);
             PiecePositions[move.FinalPosition] = move.Piece;
-            Promotion(move.FinalPosition, move.Piece);
+            Promotion(move);
 
             if (move.Piece is King)
             {
                 KingPositions[move.Piece.Colour] = move.FinalPosition;
             }
 
-            UpdatePieceAfterMoving(move.Piece, move.FinalPosition);
+            UpdatePieceAfterMoving(move.PromotionPiece ?? move.Piece, move.FinalPosition);
 
             CurrentPly += 1;
             CurrentColour = ChessService.GetOppositeColour(CurrentColour);
@@ -84,7 +84,7 @@ namespace UserInterface
 
         public void UpdatePieceAfterMoving(Piece piece, int finalPosition)
         {
-            piece.MovedOn = CurrentPly;
+            piece.HasMoved = true;
             piece.Position = finalPosition;
             SetPieceAndLongRangePieceAttackedSquares(piece);
         }
@@ -115,7 +115,7 @@ namespace UserInterface
             UpdatePieceAfterMoving(move.Piece, move.InitialPosition);
             if (move.IsFirstMove)
             {
-                move.Piece.MovedOn = null;
+                move.Piece.HasMoved = false;
             }
         }
 
@@ -188,7 +188,7 @@ namespace UserInterface
                 UpdatePieceAfterMoving(PiecePositions[initialPosition - 4], initialPosition - 4);
                 if (move.IsFirstMove)
                 {
-                    PiecePositions[initialPosition - 4].MovedOn = null;
+                    PiecePositions[initialPosition - 4].HasMoved = false;
                 }
             }
             else
@@ -198,21 +198,19 @@ namespace UserInterface
                 UpdatePieceAfterMoving(PiecePositions[initialPosition + 3], initialPosition + 3);
                 if (move.IsFirstMove)
                 {
-                    PiecePositions[initialPosition + 3].MovedOn = null;
+                    PiecePositions[initialPosition + 3].HasMoved = false;
                 }
             }
         }
 
-        private void Promotion(int selectedPosition, Piece selectedPiece)
+        private void Promotion(Move move)
         {
-            if (selectedPiece is Pawn && (selectedPosition / 8 == 0 || selectedPosition / 8 == 7))
+            if (move.PromotionPiece == null)
             {
-                var newQueen = new Queen(selectedPiece.Colour, selectedPosition)
-                {
-                    MovedOn = selectedPiece.MovedOn
-                };
-                PiecePositions[selectedPosition] = newQueen;
+                return;
             }
+            
+            PiecePositions[move.FinalPosition] = move.PromotionPiece;
         }
 
         private void SetUpBoard(Colour perspective)
@@ -224,16 +222,16 @@ namespace UserInterface
             PiecePositions[2] = new Bishop(topColour, 2);
             PiecePositions[3] = new Queen(topColour, 3);
             PiecePositions[5] = new King(topColour, 5);
-            PiecePositions[5].MovedOn = 1;
+            PiecePositions[5].HasMoved = true;
             PiecePositions[12] = new Bishop(topColour, 12);
-            PiecePositions[12].MovedOn = 1;
+            PiecePositions[12].HasMoved = true;
             PiecePositions[53] = new Knight(topColour, 53);
-            PiecePositions[53].MovedOn = 1;
+            PiecePositions[53].HasMoved = true;
             PiecePositions[7] = new Rook(topColour, 7);
             PiecePositions[8] = new Pawn(topColour, 8);
             PiecePositions[9] = new Pawn(topColour, 9);
             PiecePositions[18] = new Pawn(topColour, 18);
-            PiecePositions[18].MovedOn = 1;
+            PiecePositions[18].HasMoved = true;
             PiecePositions[13] = new Pawn(topColour, 13);
             PiecePositions[14] = new Pawn(topColour, 14);
             PiecePositions[15] = new Pawn(topColour, 15);
@@ -242,7 +240,7 @@ namespace UserInterface
             PiecePositions[49] = new Pawn(bottomColour, 49);
             PiecePositions[50] = new Pawn(bottomColour, 50);
             PiecePositions[11] = new Pawn(bottomColour, 11);
-            PiecePositions[11].MovedOn = 1;
+            PiecePositions[11].HasMoved = true;
             PiecePositions[54] = new Pawn(bottomColour, 54);
             PiecePositions[55] = new Pawn(bottomColour, 55);
             PiecePositions[56] = new Rook(bottomColour, 56);
@@ -251,13 +249,70 @@ namespace UserInterface
             PiecePositions[59] = new Queen(bottomColour, 59);
             PiecePositions[60] = new King(bottomColour, 60);
             PiecePositions[34] = new Bishop(bottomColour, 34);
-            PiecePositions[34].MovedOn = 1;
+            PiecePositions[34].HasMoved = true;
             PiecePositions[52] = new Knight(bottomColour, 52);
-            PiecePositions[52].MovedOn = 1;
+            PiecePositions[52].HasMoved = true;
             PiecePositions[63] = new Rook(bottomColour, 63);
 
             KingPositions[bottomColour] = 60;
             KingPositions[topColour] = 5;
+        }
+
+        private void SetUpBoardFromFen(string fen)
+        {
+            var fenFields = fen.Split(' ');
+
+            var currentPosition = 0;
+            var board = fenFields[0];
+            foreach (var character in board)
+            {
+                if (character == '/')
+                {
+                    continue;
+                }
+                if (char.IsDigit(character))
+                {
+                    currentPosition += int.Parse(character.ToString());
+                    continue;
+                }
+                var piece = GetPieceFromCharacter(character, currentPosition);
+                PiecePositions[currentPosition] = piece;
+            }
+        }
+
+        private Piece GetPieceFromCharacter(char character, int position)
+        {
+            var colour = char.IsLower(character) ? Colour.Black : Colour.White;
+            var lowerChar = char.ToLower(character);
+            Piece piece;
+            switch (lowerChar)
+            {
+                case 'k':
+                    piece = new King(colour, position);
+                    break;
+                case 'q':
+                    piece = new Queen(colour, position);
+                    break;
+                case 'r':
+                    piece = new Rook(colour, position);
+                    break;
+                case 'b':
+                    piece = new Bishop(colour, position);
+                    break;
+                case 'n':
+                    piece = new Knight(colour, position);
+                    break;
+                case 'p':
+                    piece = new Pawn(colour, position);
+                    if (position / 8 != 1 && colour == Colour.Black || position / 8 == 6 && colour == Colour.White)
+                    {
+                        piece.HasMoved = true;
+                    }
+                    break;
+                default:
+                    throw new Exception("Unhandled character: " + lowerChar);
+            }
+            return piece;
         }
 
         private void PlacePieces(Colour colour, int startingPosition)

@@ -169,7 +169,7 @@ namespace UserInterface
                 "a4a5",
                 "b7b6"
             };
-            var number = GetNumberOfPositions(_board, 3, new Stack<string>(), null, 3);
+            var number = GetNumberOfPositions(_board, 4, new Stack<string>(), null, 4);
             Console.WriteLine(number);
         }
 
@@ -192,7 +192,7 @@ namespace UserInterface
                 foreach (var move in moves)
                 {
                     board.MakeMove(move);
-                    var position = GetPgn(move.InitialPosition, move.FinalPosition);
+                    var position = GetPgn(move.InitialPosition, move.FinalPosition, move.PromotionPiece);
                     moveHistory.Push(position);
                     var moveCount = GetNumberOfPositions(board, depth - 1, moveHistory, desiredMoves, depthToPrintPositions);
                     numberOfMoves += moveCount;
@@ -207,9 +207,16 @@ namespace UserInterface
             return numberOfMoves;
         }
 
-        private string GetPgn(int startPosition, int endPosition)
+        private string GetPgn(int startPosition, int endPosition, Piece promotionPiece)
         {
-            return GetPgn(startPosition) + GetPgn(endPosition);
+            var promotion = promotionPiece != null ? GetPromotionString(promotionPiece) : "";
+            return GetPgn(startPosition) + GetPgn(endPosition) + promotion;
+        }
+
+        private string GetPromotionString(Piece promotionPiece)
+        {
+            var promotionString = char.ToLower(promotionPiece.GetType().Name[0]).ToString();
+            return promotionString == "k" ? "n" : promotionString;
         }
 
         private string GetPgn(int position)

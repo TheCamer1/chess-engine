@@ -29,7 +29,7 @@ namespace UserInterface.Pieces
         private List<Move> GetPossibleCastlingMoves(Board board)
         {
             var castlingMoves = new List<Move>();
-            if (MovedOn != null)
+            if (HasMoved)
             {
                 return castlingMoves;
             }
@@ -57,7 +57,7 @@ namespace UserInterface.Pieces
 
         private void AddCastlingMove(Board board, int castlingPosition, int rookPosition, List<Move> castlingMoves, HashSet<int> emptySquares, HashSet<int> nonAttackedSquares, Colour oppositeColour)
         {
-            if (board.GetPiece(rookPosition)?.MovedOn == null
+            if (board.GetPiece(rookPosition)?.HasMoved == false
                 && !board.IsKingInCheck(Colour)
                 && nonAttackedSquares.All(e => !board.IsSquareAttacked(oppositeColour, e))
                 && emptySquares.All(e => board.GetPiece(e) == null))

@@ -9,13 +9,14 @@ namespace UserInterface
             Piece = piece;
             InitialPosition = piece.Position;
             FinalPosition = finalPosition;
-            IsFirstMove = piece.MovedOn == null;
+            IsFirstMove = !piece.HasMoved;
         }
 
         public int InitialPosition { get; set; }
         public int FinalPosition { get; set; }
         public Piece Piece { get; set; }
         public Piece CapturedPiece { get; set; }
+        public Piece PromotionPiece { get; set; }
         public bool IsCastling { get; set; }
         public bool IsEnPassant { get; set; }
         public bool IsFirstMove { get; set; }

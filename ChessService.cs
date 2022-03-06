@@ -16,6 +16,11 @@ namespace UserInterface
         public static List<Move> GetMovesToBlockCheck(Board board, List<Move> possibleMovesIfPinned, int kingPosition, Piece checkingPiece)
         {
             var squaresAlongVector = GetSquaresAlongVectorUntilPiece(board, checkingPiece, kingPosition);
+
+            if (checkingPiece.GetType() == typeof(Knight))
+            {
+                squaresAlongVector = new List<int>() { checkingPiece.Position };
+            }
             return possibleMovesIfPinned
                 .Where(e => squaresAlongVector.Contains(e.FinalPosition))
                 .ToList();

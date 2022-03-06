@@ -9,7 +9,7 @@ namespace UserInterface.Pieces
     {
         public Colour Colour { get; set; }
         public Image Image { get; set; }
-        public int? MovedOn { get; set; }
+        public bool HasMoved { get; set; }
         public HashSet<int> AttackedSquares { get; set; }
         public int Position { get; set; }
         public PieceType PieceType { get; set; }
