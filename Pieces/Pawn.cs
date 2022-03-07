@@ -17,11 +17,11 @@ namespace UserInterface.Pieces
         {
             var direction = board.Perspective == Colour ? -1 : 1;
             var possibleChecks = new List<int>();
-            if (ChessService.IsNextSquareValid(board, Colour, Position, Position, direction * 9, true, true))
+            if (PieceMoveService.IsNextSquareValid(board, Colour, Position, Position, direction * 9, true, true))
             {
                 possibleChecks.Add(Position + direction * 9);
             }
-            if (ChessService.IsNextSquareValid(board, Colour, Position, Position, direction * 7, true, true))
+            if (PieceMoveService.IsNextSquareValid(board, Colour, Position, Position, direction * 7, true, true))
             {
                 possibleChecks.Add(Position + direction * 7);
             }
@@ -54,7 +54,7 @@ namespace UserInterface.Pieces
                     AddPromotionsToPossbleMoves(board, possibleMoves, firstStepSquare);
                     return;
                 }
-                possibleMoves.Add(ChessService.GetMove(board, Position, firstStepSquare));
+                possibleMoves.Add(PieceMoveService.GetMove(board, Position, firstStepSquare));
             }
 
             var secondStepSquare = Position + direction * 16;
@@ -65,7 +65,7 @@ namespace UserInterface.Pieces
                 && pieceAtFirstStep == null
                 && pieceAtSecondStep == null)
             {
-                possibleMoves.Add(ChessService.GetMove(board, Position, secondStepSquare));
+                possibleMoves.Add(PieceMoveService.GetMove(board, Position, secondStepSquare));
             }
         }
 
@@ -86,7 +86,7 @@ namespace UserInterface.Pieces
             var moves = pieces
                 .Select(e =>
                 {
-                    var move = ChessService.GetMove(board, Position, firstStepSquare);
+                    var move = PieceMoveService.GetMove(board, Position, firstStepSquare);
                     move.PromotionPiece = e;
                     return move;
                 });
@@ -95,7 +95,7 @@ namespace UserInterface.Pieces
 
         private void AddDirectCapturingStep(Board board, List<Move> possibleMoves, int direction, int step)
         {
-            if (!ChessService.IsNextSquareValid(board, Colour, Position, Position, step * direction))
+            if (!PieceMoveService.IsNextSquareValid(board, Colour, Position, Position, step * direction))
             {
                 return;
             }
@@ -109,13 +109,13 @@ namespace UserInterface.Pieces
                     AddPromotionsToPossbleMoves(board, possibleMoves, Position + step * direction);
                     return;
                 }
-                possibleMoves.Add(ChessService.GetMove(board, Position, Position + direction * step));
+                possibleMoves.Add(PieceMoveService.GetMove(board, Position, Position + direction * step));
             }
         }
 
         private void AddEnPassantCapturingStep(Board board, List<Move> possibleMoves, int direction, int step, int capturablePieceStep)
         {
-            if (!ChessService.IsNextSquareValid(board, Colour, Position, Position, step * direction))
+            if (!PieceMoveService.IsNextSquareValid(board, Colour, Position, Position, step * direction))
             {
                 return;
             }
@@ -127,7 +127,7 @@ namespace UserInterface.Pieces
                 && ((Pawn)capturablePiece).TwoStepMovePerformedOn == board.CurrentPly - 1
                 && !IsPinnedFromEnPassant(board, capturablePiecePosition))
             {
-                var move = ChessService.GetMove(board, Position, Position + direction * step);
+                var move = PieceMoveService.GetMove(board, Position, Position + direction * step);
                 move.IsEnPassant = true;
                 move.CapturedPiece = capturablePiece;
                 possibleMoves.Add(move);
@@ -139,12 +139,12 @@ namespace UserInterface.Pieces
             var vectors = new List<int> { -1, 1 };
             foreach (var vector in vectors)
             {
-                if (!ChessService.IsKingOnVector(board, Colour, Position, vector) && !ChessService.IsKingOnVector(board, Colour, capturablePosition, vector))
+                if (!PieceMoveService.IsKingOnVector(board, Colour, Position, vector) && !PieceMoveService.IsKingOnVector(board, Colour, capturablePosition, vector))
                 {
                     continue;
                 }
-                var pinningPiece = ChessService.GetQueenVectoredAttackingPiece(board, Colour, Position, -vector)
-                    ?? ChessService.GetQueenVectoredAttackingPiece(board, Colour, capturablePosition, -vector);
+                var pinningPiece = PieceMoveService.GetQueenVectoredAttackingPiece(board, Colour, Position, -vector)
+                    ?? PieceMoveService.GetQueenVectoredAttackingPiece(board, Colour, capturablePosition, -vector);
                 if (pinningPiece == null)
                 {
                     continue;

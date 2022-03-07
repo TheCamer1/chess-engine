@@ -16,14 +16,14 @@ namespace UserInterface.Pieces
         public override List<int> GetAttackedSquares(Board board)
         {
             var possibleMoves = new List<Move>();
-            ChessService.AddStepsToPossibleMoves(board, Colour, Position, possibleMoves, _possibleSteps, true);
+            PieceMoveService.AddStepsToPossibleMoves(board, Colour, Position, possibleMoves, _possibleSteps, true);
             return possibleMoves.Select(e => e.FinalPosition).ToList();
         }
 
         public override List<Move> GetPossibleMovesIgnoringCheckRules(Board board)
         {
             var possibleMoves = new List<Move>();
-            ChessService.AddStepsToPossibleMoves(board, Colour, Position, possibleMoves, _possibleSteps);
+            PieceMoveService.AddStepsToPossibleMoves(board, Colour, Position, possibleMoves, _possibleSteps);
             return possibleMoves;
         }
     }

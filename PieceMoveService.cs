@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using UserInterface.Pieces;
 
 namespace UserInterface
 {
-    public static class ChessService
+    public static class PieceMoveService
     {
         public static readonly List<int> _diagonalVectors = new List<int> { -9, -7, 7, 9 };
         public static readonly List<int> _horizontalVectors = new List<int> { -1, 1, -8, 8 };
@@ -194,27 +193,6 @@ namespace UserInterface
                 && (testingPiece == null 
                     || testingPosition == initialPosition 
                     || (!excludeKings && testingPiece is King && testingPiece.Colour != colour));
-        }
-
-        public static Point GetPointFromPosition(int position)
-        {
-            var x = position % 8;
-            var y = position / 8;
-            return new Point(x, y);
-        }
-
-        public static int GetPositionFromPoint(int x, int y)
-        {
-            if (x > 7 || y > 7)
-            {
-                throw new System.Exception("Invalid coordinates: " + x + ", " + y);
-            }
-            return x + 8 * y;
-        }
-
-        public static Colour GetOppositeColour(Colour colour)
-        {
-            return colour == Colour.White ? Colour.Black : Colour.White;
         }
     }
 }

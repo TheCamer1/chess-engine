@@ -10,7 +10,7 @@ namespace UserInterface.Pieces
         public Colour Colour { get; set; }
         public Image Image { get; set; }
         public bool HasMoved { get; set; }
-        public HashSet<int> AttackedSquares { get; set; }
+        public List<int> AttackedSquares { get; set; }
         public int Position { get; set; }
         public PieceType PieceType { get; set; }
 
@@ -22,7 +22,7 @@ namespace UserInterface.Pieces
 
         public virtual void SetAttackedSquares(Board board)
         {
-            AttackedSquares = new HashSet<int>(GetAttackedSquares(board));
+            AttackedSquares = new List<int>(GetAttackedSquares(board));
         }
 
         public abstract List<int> GetAttackedSquares(Board board);
@@ -31,19 +31,19 @@ namespace UserInterface.Pieces
         public virtual List<Move> GetPossibleMoves(Board board)
         {
             var possibleMoves = GetPossibleMovesIgnoringCheckRules(board);
-            var possibleMovesIfPinned = ChessService.GetPossibleMovesIfPinned(board, Colour, possibleMoves, Position);
+            var possibleMovesIfPinned = PieceMoveService.GetPossibleMovesIfPinned(board, Colour, possibleMoves, Position);
             if (!board.IsKingInCheck(Colour))
             {
                 return possibleMovesIfPinned;
             }
             var kingPosition = board.KingPositions[Colour];
-            var checkingPieces = board.GetAttackingPieces(ChessService.GetOppositeColour(Colour), kingPosition);
+            var checkingPieces = board.GetAttackingPieces(UtilityService.GetOppositeColour(Colour), kingPosition);
             if (checkingPieces.Count > 1)
             {
                 return new List<Move>();
             }
             var checkingPiece = checkingPieces.First();
-            return ChessService.GetMovesToBlockCheck(board, possibleMovesIfPinned, kingPosition, checkingPiece);
+            return PieceMoveService.GetMovesToBlockCheck(board, possibleMovesIfPinned, kingPosition, checkingPiece);
         }
     }
 }
